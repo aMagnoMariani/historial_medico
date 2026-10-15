@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid h-100 d-flex align-items-center justify-content-center" style="min-height: 90vh;">
+    <div class="card card-custom p-5 text-center" style="width: 450px; border-top: 5px solid var(--corporate-blue);">
+        <div class="mb-4">
+            <h2 class="fw-bold" style="color: var(--corporate-blue);">🏥 Clínica Popular</h2>
+            <p class="text-muted">Bienvenido, por favor inicie sesión</p>
+        </div>
+        
+        <form method="post" class="text-start">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label small fw-bold">Usuario</label>
+                {{ form.username }}
+            </div>
+            <div class="mb-4">
+                <label class="form-label small fw-bold">Contraseña</label>
+                {{ form.password }}
+            </div>
+            <button type="submit" class="btn btn-corporate w-100 py-2 fw-bold">
+                Ingresar al Sistema <i class="bi bi-arrow-right-short"></i>
+            </button>
+        </form>
+        
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-danger mt-3 py-2 small">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    /* Sobrescribir estilos de Django forms para que usen Bootstrap */
+    input {
+        display: block;
+        width: 100%;
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #212529;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    }
+    input:focus {
+        border-color: var(--corporate-blue);
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem rgba(25, 118, 210, 0.25);
+    }
+</style>
+{% endblock %}

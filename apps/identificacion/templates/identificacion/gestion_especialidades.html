@@ -1,0 +1,135 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">🩺 Gestión de Especialidades</h2>
+    </div>
+
+    <ul class="nav nav-tabs mb-4" id="espTabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" id="list-tab" data-bs-toggle="tab" data-bs-target="#list" type="button">
+                <i class="bi bi-list-stars"></i> Lista Especialidades
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button">
+                <i class="bi bi-plus-circle"></i> Registrar Especialidad
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- TAB LISTA -->
+        <div class="tab-pane fade show active" id="list" role="tabpanel">
+            <div class="card card-custom p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Descripción</th>
+                                <th>Estado</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for esp in especialidades %}
+                            <tr>
+                                <td>{{ esp.id }}</td>
+                                <td>{{ esp.descripcion }}</td>
+                                <td>
+                                    {% if esp.estado %}
+                                        <span class="badge bg-success">Activa</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Desactivada</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalEdit" data-id="{{ esp.id }}" data-desc="{{ esp.descripcion }}">
+                                        <i class="bi bi-pencil"></i> Modificar
+                                    </button>
+                                    {% if esp.estado %}
+                                    <form method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="id" value="{{ esp.id }}">
+                                        <input type="hidden" name="action" value="desactivar">
+                                        <button type="submit" class="btn btn-sm btn-outline-warning">
+                                            <i class="bi bi-pause-circle"></i> Desactivar
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <form method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="id" value="{{ esp.id }}">
+                                        <input type="hidden" name="action" value="activar">
+                                        <button type="submit" class="btn btn-sm btn-outline-success">
+                                            <i class="bi bi-play-circle"></i> Activar
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center text-muted">No hay especialidades</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB REGISTRAR -->
+        <div class="tab-pane fade" id="register" role="tabpanel">
+            <div class="card card-custom p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="crear">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label small fw-bold">Descripción de Especialidad</label>
+                            <input type="text" name="descripcion" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-end">
+                        <button type="submit" class="btn btn-corporate px-4 fw-bold">Guardar Especialidad</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar -->
+<div class="modal fade" id="modalEdit" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content rounded-4">
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="editar">
+        <input type="hidden" name="id" id="edit_id">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">Modificar Especialidad</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <label class="form-label small fw-bold">Descripción</label>
+          <input type="text" name="descripcion" id="edit_desc" class="form-control" required>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-corporate">Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+var modalEdit = document.getElementById('modalEdit');
+modalEdit.addEventListener('show.bs.modal', function (event) {
+  var button = event.relatedTarget;
+  document.getElementById('edit_id').value = button.getAttribute('data-id');
+  document.getElementById('edit_desc').value = button.getAttribute('data-desc');
+});
+</script>
+{% endblock %}

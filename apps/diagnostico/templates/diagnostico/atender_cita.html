@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <h2 class="fw-bold mb-3">Atender Cita #{{ cita.id }}</h2>
+    <div class="card card-custom p-3 mb-4">
+        <p><strong>Paciente:</strong> {{ cita.paciente.persona.nombre }} {{ cita.paciente.persona.apellido }}</p>
+        <p><strong>Médico:</strong> {{ cita.medico.persona.nombre }} {{ cita.medico.persona.apellido }}</p>
+        <p><strong>Fecha:</strong> {{ cita.fecha_atencion }}</p>
+        <p><strong>Estado:</strong> {{ cita.estado_cita_id }}</p>
+    </div>
+
+    <ul class="nav nav-tabs mb-4" id="attTabs" role="tablist">
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#med">Mediciones Antropométricas</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#ante">Antecedentes Médicos</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#diag">Diagnóstico</button></li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- MEDICIONES -->
+        <div class="tab-pane fade show active" id="med">
+            <div class="card card-custom p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="medicion">
+                    <div id="mediciones_container">
+                        <div class="row g-2 medicion-row mb-2 align-items-end">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Tipo de Medición</label>
+                                <select name="equipo_parametro" class="form-select" required>
+                                    <option value="">Seleccione...</option>
+                                    {% for ep in equipo_parametros %}
+                                    <option value="{{ ep.id }}">{{ ep.equipo.nombre }} - {{ ep.parametro.dsc }} ({{ ep.parametro.unidad }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Valor</label>
+                                <input type="number" step="any" name="valor" class="form-control" required>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-outline-danger btn-sm w-100 quitar-med">Quitar</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3 d-flex gap-2 justify-content-end">
+                        <button type="button" class="btn btn-outline-secondary" id="add_medicion">+ Agregar medición</button>
+                        <button class="btn btn-corporate">Registrar Mediciones</button>
+                    </div>
+                </form>
+                <hr>
+                <h6>Últimas mediciones</h6>
+                <ul>
+                    {% for m in mediciones %}
+                    <li>{{ m.fecha_toma }} - Cabecera ID {{ m.id }}</li>
+                    {% empty %}
+                    <li>Sin mediciones</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <!-- ANTECEDENTES -->
+        <div class="tab-pane fade" id="ante">
+            <div class="card card-custom p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="antecedente">
+                    <div id="antecedentes_container">
+                        <div class="row g-2 antecedente-row mb-2 align-items-end">
+                            <div class="col-md-5">
+                                <label class="form-label small fw-bold">Categoría</label>
+                                <select name="categoria" class="form-select" required>
+                                    <option value="">Seleccione</option>
+                                    {% for c in categorias %}
+                                    <option value="{{ c.id }}">{{ c.dep_id.dsc }} › {{ c.dsc }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label small fw-bold">Descripción</label>
+                                <input type="text" name="descripcion" class="form-control" required
+                                       placeholder="Ej: Familia propensa al cáncer / Operación de apéndice">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="button" class="btn btn-outline-danger btn-sm w-100 quitar-ant">Quitar</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-3 d-flex gap-2 justify-content-end">
+                        <button type="button" class="btn btn-outline-secondary" id="add_antecedente">+ Agregar antecedente</button>
+                        <button class="btn btn-corporate">Registrar Antecedentes</button>
+                    </div>
+                </form>
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>🩺 Antecedentes de Salud</h6>
+                        <ul>
+                            {% for a in antecedentes_salud %}
+                            <li>{{ a.antecedente_salud_id.dsc }}: {{ a.valor }}</li>
+                            {% empty %}
+                            <li>Sin antecedentes de salud</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>👨‍👩‍👧 Antecedentes Familiares (padres)</h6>
+                        <ul>
+                            {% for a in antecedentes_familiares %}
+                            <li>{{ a.antecedente_salud_id.dsc }}: {{ a.valor }}</li>
+                            {% empty %}
+                            <li>Sin antecedentes familiares</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DIAGNÓSTICO -->
+        <div class="tab-pane fade" id="diag">
+            <div class="card card-custom p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="diagnostico">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Categoría Enfermedad</label>
+                        <select name="enfermedad_categoria" id="cat_sel" class="form-select">
+                            <option value="">Seleccione categoría</option>
+                            {% for c in catalogo %}
+                            {% if c.depid_id is None %}
+                            <option value="{{ c.id }}">{{ c.dsc }}</option>
+                            {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Enfermedad</label>
+                        <select name="enfermedad" id="enf_sel" class="form-select" required>
+                            <option value="">Primero seleccione categoría</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Síntomas</label>
+                        <div id="sintomas_container">
+                            <input type="text" name="sintomas" class="form-control mb-2" placeholder="Síntoma">
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="add_sintoma">+ Agregar síntoma</button>
+                    </div>
+                    <div class="text-end">
+                        <button class="btn btn-corporate">Finalizar Atención</button>
+                    </div>
+                </form>
+                <hr>
+                <h6>Diagnóstico registrado</h6>
+                <p>Enfermedades:</p>
+                <ul>
+                    {% for e in enfermedades %}
+                    <li>{{ e.valor }}</li>
+                    {% empty %}
+                    <li>Sin enfermedades registradas</li>
+                    {% endfor %}
+                </ul>
+                <p>Síntomas:</p>
+                <ul>
+                    {% for s in sintomas %}
+                    <li>{{ s.sintoma }}</li>
+                    {% empty %}
+                    <li>Sin síntomas</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+const medContainer = document.getElementById('mediciones_container');
+document.getElementById('add_medicion')?.addEventListener('click', function(){
+    const row = medContainer.querySelector('.medicion-row');
+    const clone = row.cloneNode(true);
+    clone.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
+    clone.querySelectorAll('input').forEach(i => i.value = '');
+    medContainer.appendChild(clone);
+});
+medContainer?.addEventListener('click', function(e){
+    const btn = e.target.closest('.quitar-med');
+    if (btn && medContainer.querySelectorAll('.medicion-row').length > 1) {
+        btn.closest('.medicion-row').remove();
+    }
+});
+const antContainer = document.getElementById('antecedentes_container');
+document.getElementById('add_antecedente')?.addEventListener('click', function(){
+    const row = antContainer.querySelector('.antecedente-row');
+    const clone = row.cloneNode(true);
+    clone.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
+    clone.querySelectorAll('input').forEach(i => i.value = '');
+    antContainer.appendChild(clone);
+});
+antContainer?.addEventListener('click', function(e){
+    const btn = e.target.closest('.quitar-ant');
+    if (btn && antContainer.querySelectorAll('.antecedente-row').length > 1) {
+        btn.closest('.antecedente-row').remove();
+    }
+});
+document.getElementById('add_sintoma')?.addEventListener('click', function(){
+    const container = document.getElementById('sintomas_container');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.name = 'sintomas';
+    input.className = 'form-control mb-2';
+    input.placeholder = 'Síntoma';
+    container.appendChild(input);
+});
+const catalogoData = [
+    {% for e in catalogo %}
+    {id: {{ e.id }}, dsc: "{{ e.dsc|escapejs }}", depid: {{ e.depid_id|default:'null' }}},
+    {% endfor %}
+];
+const catSel = document.getElementById('cat_sel');
+const enfSel = document.getElementById('enf_sel');
+catSel?.addEventListener('change', function(){
+    const pid = parseInt(this.value);
+    enfSel.innerHTML = '<option value="">Seleccione enfermedad</option>';
+    catalogoData.filter(e => e.depid === pid).forEach(e => {
+        const opt = document.createElement('option');
+        opt.value = e.dsc;
+        opt.textContent = e.dsc;
+        enfSel.appendChild(opt);
+    });
+});
+</script>
+{% endblock %}

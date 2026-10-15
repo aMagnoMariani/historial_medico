@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">⚙️ Centro de Configuración</h2>
+    </div>
+    <p class="text-muted mb-4">Administra aquí todo lo configurable del consultorio: roles, usuarios, equipos de medición, catálogos clínicos y personal.</p>
+
+    <div class="row g-3">
+        <!-- Seguridad -->
+        <div class="col-md-4">
+            <div class="card card-custom p-4 h-100">
+                <div class="fs-2 mb-2">🛡️</div>
+                <h5 class="fw-bold">Roles y Permisos</h5>
+                <p class="text-muted small">Crea roles y define qué puede ver/editar cada uno (citas, pacientes, diagnóstico…).</p>
+                <a href="{% url 'usuarios:gestion_roles_permisos' %}" class="btn btn-corporate btn-sm stretched-link">Abrir</a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card card-custom p-4 h-100">
+                <div class="fs-2 mb-2">👤</div>
+                <h5 class="fw-bold">Usuarios</h5>
+                <p class="text-muted small">Crear, modificar, activar/desactivar cuentas del personal con su rol.</p>
+                <a href="{% url 'usuarios:gestion_usuarios' %}" class="btn btn-corporate btn-sm stretched-link">Abrir</a>
+            </div>
+        </div>
+        <!-- Identificación -->
+        <div class="col-md-4">
+            <div class="card card-custom p-4 h-100">
+                <div class="fs-2 mb-2">🪪</div>
+                <h5 class="fw-bold">Tipos de Identificación</h5>
+                <p class="text-muted small">Cédula, Pasaporte y los documentos disponibles al registrar un paciente.</p>
+                <a href="{% url 'identificacion:gestion_tipos_identificacion' %}" class="btn btn-corporate btn-sm stretched-link">Abrir</a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card card-custom p-4 h-100">
+                <div class="fs-2 mb-2">📍</div>
+                <h5 class="fw-bold">Direcciones</h5>
+                <p class="text-muted small">Estados, Municipios, Parroquias y Sectores/Calles con sus relaciones jerárquicas.</p>
+                <a href="{% url 'identificacion:gestion_direcciones' %}" class="btn btn-corporate btn-sm stretched-link">Abrir</a>
+            </div>
+        </div>
+        <!-- Catálogos de persona -->
+        <div class="col-md-4">
+            <div class="card card-custom p-4 h-100">
+                <div class="fs-2 mb-2">🧬</div>
+                <h5 class="fw-bold">Etnias</h5>
+                <p class="text-muted small">Catálogo de etnias seleccionable al registrar un paciente.</p>
+                <a href="{% url 'identificacion:gestion_catalogo_persona' 'etnia' %}" class="btn btn-corporate btn-sm stretched-link">Abrir</a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card card-custom p-4 h-100">
+                <div class="fs-2 mb-2">🩸</div>
+                <h5 class="fw-bold">Tipos de Sangre</h5>
+                <p class="text-muted small">Grupos sanguíneos (O+, A-, etc.) del registro de pacientes.</p>
+                <a href="{% url 'identificacion:gestion_catalogo_persona' 'sangre' %}" class="btn btn-corporate btn-sm stretched-link">Abrir</a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card card-custom p-4 h-100">
+                <div class="fs-2 mb-2">♿</div>
+                <h5 class="fw-bold">Discapacidades</h5>
+                <p class="text-muted small">Tipos de discapacidad (Visual, Motora…) del registro de pacientes.</p>
+                <a href="{% url 'identificacion:gestion_catalogo_persona' 'discapacidad' %}" class="btn btn-corporate btn-sm stretched-link">Abrir</a>
+            </div>
+        </div>
+        <!-- Personal médico -->
+        <div class="col-md-4">
+            <div class="card card-custom p-4 h-100">
+                <div class="fs-2 mb-2">🩺</div>
+                <h5 class="fw-bold">Médicos</h5>
+                <p class="text-muted small">Registrar médicos con su especialidad e identificación.</p>
+                <a href="{% url 'identificacion:gestion_medicos' %}" class="btn btn-corporate btn-sm stretched-link">Abrir</a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card card-custom p-4 h-100">
+                <div class="fs-2 mb-2">⭐</div>
+                <h5 class="fw-bold">Especialidades</h5>
+                <p class="text-muted small">Gestionar las especialidades atendidas (activar/desactivar, modificar).</p>
+                <a href="{% url 'identificacion:gestion_especialidades' %}" class="btn btn-corporate btn-sm stretched-link">Abrir</a>
+            </div>
+        </div>
+        <!-- Clínico configurable -->
+        <div class="col-md-4">
+            <div class="card card-custom p-4 h-100">
+                <div class="fs-2 mb-2">🎛️</div>
+                <h5 class="fw-bold">Config. Mediciones</h5>
+                <p class="text-muted small">Equipos, parámetros y relaciones — según las herramientas disponibles del consultorio.</p>
+                <a href="{% url 'mediciones:gestion_config_mediciones' %}" class="btn btn-corporate btn-sm stretched-link">Abrir</a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card card-custom p-4 h-100">
+                <div class="fs-2 mb-2">📚</div>
+                <h5 class="fw-bold">Catálogo de Enfermedades</h5>
+                <p class="text-muted small">Categorías y enfermedades jerárquicas que el médico selecciona al atender.</p>
+                <a href="{% url 'diagnostico:gestion_catalogo_enfermedades' %}" class="btn btn-corporate btn-sm stretched-link">Abrir</a>
+            </div>
+        </div>
+        <!-- Reportes -->
+        <div class="col-md-4">
+            <div class="card card-custom p-4 h-100">
+                <div class="fs-2 mb-2">📊</div>
+                <h5 class="fw-bold">Estadísticas y Exportación</h5>
+                <p class="text-muted small">Ver indicadores y exportar reportes a Excel o PDF con filtro de fechas.</p>
+                <a href="{% url 'estadistica:dashboard' %}" class="btn btn-corporate btn-sm stretched-link">Abrir</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

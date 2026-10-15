@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">👥 Gestión de Usuarios</h2>
+    </div>
+
+    <ul class="nav nav-tabs mb-4" id="usrTabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active" id="list-tab" data-bs-toggle="tab" data-bs-target="#list" type="button">Lista</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" id="create-tab" data-bs-toggle="tab" data-bs-target="#create" type="button">Crear</button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- LISTA -->
+        <div class="tab-pane fade show active" id="list" role="tabpanel">
+            <div class="card card-custom p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Cédula</th>
+                                <th>Teléfono</th>
+                                <th>Edad</th>
+                                <th>Rol</th>
+                                <th>Usuario</th>
+                                <th>Estado</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in usuarios %}
+                            {% with ident=u.persona.identificaciones.first %}
+                            <tr>
+                                <td>{{ u.id }}</td>
+                                <td>{{ u.persona.nombre }} {{ u.persona.apellido }}</td>
+                                <td>{% if ident %}{{ ident.valor }}{% endif %}</td>
+                                <td>{{ u.persona.telefono }}</td>
+                                <td>{% if u.persona.fecha_nacimiento %}{{ u.persona.fecha_nacimiento|date:"Y" }}{% endif %}</td>
+                                <td>{{ u.rol.nombre|default:"-" }}</td>
+                                <td>{{ u.username }}</td>
+                                <td>
+                                    {% if u.is_active %}<span class="badge bg-success">Activo</span>{% else %}<span class="badge bg-secondary">Inactivo</span>{% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#modalView" data-id="{{ u.id }}" data-nombre="{{ u.persona.nombre }}" data-apellido="{{ u.persona.apellido }}" data-cedula="{{ ident.valor|default:'' }}" data-telefono="{{ u.persona.telefono }}" data-edad="{{ u.persona.fecha_nacimiento }}" data-rol="{{ u.rol.nombre|default:'' }}" data-usuario="{{ u.username }}" data-clave="******">Ver</button>
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalEdit" data-id="{{ u.id }}" data-nombre="{{ u.persona.nombre }}" data-apellido="{{ u.persona.apellido }}" data-cedula="{{ ident.valor|default:'' }}" data-telefono="{{ u.persona.telefono }}" data-edad="{{ u.persona.fecha_nacimiento }}" data-rol="{{ u.rol.id }}" data-usuario="{{ u.username }}">Modificar</button>
+                                    {% if u.is_active %}
+                                    <form method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="desactivar">
+                                        <input type="hidden" name="id" value="{{ u.id }}">
+                                        <button class="btn btn-sm btn-outline-warning">Desactivar</button>
+                                    </form>
+                                    {% else %}
+                                    <form method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="activar">
+                                        <input type="hidden" name="id" value="{{ u.id }}">
+                                        <button class="btn btn-sm btn-outline-success">Activar</button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endwith %}
+                            {% empty %}
+                            <tr><td colspan="9" class="text-center text-muted">Sin usuarios</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- CREAR -->
+        <div class="tab-pane fade" id="create" role="tabpanel">
+            <div class="card card-custom p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="crear">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Nombre</label>
+                            <input type="text" name="nombre" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Apellido</label>
+                            <input type="text" name="apellido" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Cédula</label>
+                            <input type="text" name="cedula" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Teléfono</label>
+                            <input type="text" name="telefono" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Edad</label>
+                            <input type="number" name="edad" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Rol</label>
+                            <select name="rol_id" class="form-select">
+                                <option value="">Seleccione...</option>
+                                {% for r in roles %}
+                                <option value="{{ r.id }}">{{ r.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Usuario</label>
+                            <input type="text" name="usuario" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Clave</label>
+                            <input type="password" name="clave" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-end">
+                        <button type="submit" class="btn btn-corporate px-4 fw-bold">Guardar Usuario</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Ver -->
+<div class="modal fade" id="modalView" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content rounded-4">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">Detalles del Usuario</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Nombre:</strong> <span id="view_nombre"></span> <span id="view_apellido"></span></p>
+        <p><strong>Cédula:</strong> <span id="view_cedula"></span></p>
+        <p><strong>Teléfono:</strong> <span id="view_telefono"></span></p>
+        <p><strong>Edad/Fecha Nac:</strong> <span id="view_edad"></span></p>
+        <p><strong>Rol:</strong> <span id="view_rol"></span></p>
+        <p><strong>Usuario:</strong> <span id="view_usuario"></span></p>
+        <p><strong>Clave:</strong> <span id="view_clave"></span></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Editar -->
+<div class="modal fade" id="modalEdit" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="post" class="modal-content rounded-4">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="editar">
+      <input type="hidden" name="id" id="edit_id">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">Modificar Usuario</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Nombre</label>
+          <input type="text" name="nombre" id="edit_nombre" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Apellido</label>
+          <input type="text" name="apellido" id="edit_apellido" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Cédula</label>
+          <input type="text" name="cedula" id="edit_cedula" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Teléfono</label>
+          <input type="text" name="telefono" id="edit_telefono" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Edad</label>
+          <input type="number" name="edad" id="edit_edad" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Rol</label>
+          <select name="rol_id" id="edit_rol" class="form-select">
+            <option value="">Seleccione...</option>
+            {% for r in roles %}
+            <option value="{{ r.id }}">{{ r.nombre }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Usuario</label>
+          <input type="text" name="usuario" id="edit_usuario" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-bold">Nueva Clave</label>
+          <input type="password" name="clave" class="form-control" placeholder="Dejar vacío para no cambiar">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-corporate">Guardar Cambios</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.getElementById('modalView').addEventListener('show.bs.modal', function(e){
+  const b = e.relatedTarget;
+  document.getElementById('view_nombre').textContent = b.getAttribute('data-nombre');
+  document.getElementById('view_apellido').textContent = b.getAttribute('data-apellido');
+  document.getElementById('view_cedula').textContent = b.getAttribute('data-cedula');
+  document.getElementById('view_telefono').textContent = b.getAttribute('data-telefono');
+  document.getElementById('view_edad').textContent = b.getAttribute('data-edad');
+  document.getElementById('view_rol').textContent = b.getAttribute('data-rol');
+  document.getElementById('view_usuario').textContent = b.getAttribute('data-usuario');
+  document.getElementById('view_clave').textContent = b.getAttribute('data-clave');
+});
+
+document.getElementById('modalEdit').addEventListener('show.bs.modal', function(e){
+  const b = e.relatedTarget;
+  document.getElementById('edit_id').value = b.getAttribute('data-id');
+  document.getElementById('edit_nombre').value = b.getAttribute('data-nombre');
+  document.getElementById('edit_apellido').value = b.getAttribute('data-apellido');
+  document.getElementById('edit_cedula').value = b.getAttribute('data-cedula');
+  document.getElementById('edit_telefono').value = b.getAttribute('data-telefono');
+  // edad from fecha nacimiento
+  const fecha = b.getAttribute('data-edad');
+  if(fecha){
+    const born = new Date(fecha);
+    const age = new Date().getFullYear() - born.getFullYear();
+    document.getElementById('edit_edad').value = age;
+  }
+  document.getElementById('edit_rol').value = b.getAttribute('data-rol');
+  document.getElementById('edit_usuario').value = b.getAttribute('data-usuario');
+});
+</script>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">📅 Gestión de Citas</h2>
+    </div>
+
+    <div class="card card-custom p-4 mb-4">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label small fw-bold">Buscar por Cédula del Paciente</label>
+                <input type="text" id="searchCedula" class="form-control" placeholder="Número de cédula...">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small fw-bold">Fecha de Atención</label>
+                <input type="date" id="searchFecha" class="form-control">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small fw-bold">Estado</label>
+                <select id="searchEstado" class="form-select">
+                    <option value="">Todos</option>
+                    <option value="En espera">En espera</option>
+                    <option value="Atendido">Atendido</option>
+                    <option value="Cancelada">Cancelada</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="card card-custom p-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Paciente</th>
+                        <th>Cédula</th>
+                        <th>Médico</th>
+                        <th>Fecha</th>
+                        <th>Tipo</th>
+                        <th>Estado</th>
+                        <th class="text-end">Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="citasBody">
+                    <!-- Se llena vía JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+const API_URL = "{% url 'citas:api_buscar_citas' %}";
+const tbody = document.getElementById('citasBody');
+
+function renderCitas(data){
+    tbody.innerHTML = '';
+    if(data.length === 0){
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">Sin resultados</td></tr>';
+        return;
+    }
+    data.forEach(c => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${c.id}</td>
+            <td>${c.paciente}</td>
+            <td>${c.cedula}</td>
+            <td>${c.medico}</td>
+            <td>${c.fecha_atencion}</td>
+            <td>${c.tipo}</td>
+            <td><span class="badge ${c.estado === 'En espera' ? 'bg-warning' : c.estado === 'Atendido' ? 'bg-success' : 'bg-danger'}">${c.estado}</span></td>
+            <td class="text-end">
+                ${c.estado === 'En espera' ? `<a href="/diagnostico/atender/${c.id}/" class="btn btn-sm btn-outline-primary">Atender</a>` : ''}
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+async function fetchCitas(){
+    const q = document.getElementById('searchCedula').value;
+    const fecha = document.getElementById('searchFecha').value;
+    const estado = document.getElementById('searchEstado').value;
+    const params = new URLSearchParams();
+    if(q) params.append('q', q);
+    if(fecha) params.append('fecha', fecha);
+    if(estado) params.append('estado', estado);
+    const res = await fetch(`${API_URL}?${params.toString()}`);
+    const data = await res.json();
+    renderCitas(data);
+}
+
+// Carga inicial
+fetchCitas();
+
+// Búsqueda en tiempo real
+['searchCedula','searchFecha','searchEstado'].forEach(id=>{
+    document.getElementById(id).addEventListener('input', () => {
+        clearTimeout(window.searchTimeout);
+        window.searchTimeout = setTimeout(fetchCitas, 300);
+    });
+});
+</script>
+{% endblock %}

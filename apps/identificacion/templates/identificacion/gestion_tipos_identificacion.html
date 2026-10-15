@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">🪪 Tipos de Identificación</h2>
+        <a href="{% url 'usuarios:configuracion' %}" class="btn btn-outline-secondary rounded-pill">
+            <i class="bi bi-gear"></i> Configuración
+        </a>
+    </div>
+    <p class="text-muted">Estos tipos son los que aparecerán al registrar un paciente (Cédula, Pasaporte…).</p>
+
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#lista"><i class="bi bi-list"></i> Lista</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#registrar"><i class="bi bi-plus-circle"></i> Registrar</button></li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- LISTA -->
+        <div class="tab-pane fade show active" id="lista">
+            <div class="card card-custom p-4">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr><th>ID</th><th>Descripción</th><th>Tipo padre</th><th class="text-end">Acciones</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for t in catalogo %}
+                            <tr>
+                                <td>{{ t.id }}</td>
+                                <td>{{ t.dsc }}</td>
+                                <td>{{ t.depid.dsc|default:'-' }}</td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalEdit"
+                                            data-id="{{ t.id }}" data-dsc="{{ t.dsc }}" data-depid="{{ t.depid_id|default:'' }}" data-tipo="{{ t.tipo }}">
+                                        <i class="bi bi-pencil"></i> Modificar
+                                    </button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center text-muted">No hay tipos configurados</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- REGISTRAR -->
+        <div class="tab-pane fade" id="registrar">
+            <div class="card card-custom p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="crear">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Descripción *</label>
+                            <input type="text" name="dsc" class="form-control" required placeholder="Ej: Cédula, Pasaporte...">
+                            <input type="hidden" name="tipo" value="1">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Tipo padre (opcional)</label>
+                            <select name="depid" class="form-select">
+                                <option value="">— Ninguno (es raíz) —</option>
+                                {% for t in catalogo %}
+                                <option value="{{ t.id }}">{{ t.dsc }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mt-4 text-end">
+                        <button type="submit" class="btn btn-corporate px-4 fw-bold">Guardar Tipo</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar -->
+<div class="modal fade" id="modalEdit" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content rounded-4">
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="editar">
+        <input type="hidden" name="id" id="edit_id">
+        <input type="hidden" name="tipo" value="1">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">Modificar Tipo de Identificación</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <label class="form-label small fw-bold">Descripción</label>
+          <input type="text" name="dsc" id="edit_dsc" class="form-control mb-3" required>
+          <label class="form-label small fw-bold">Tipo padre</label>
+          <select name="depid" id="edit_depid" class="form-select">
+            <option value="">— Ninguno (es raíz) —</option>
+            {% for t in catalogo %}
+            <option value="{{ t.id }}">{{ t.dsc }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-corporate">Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('modalEdit').addEventListener('show.bs.modal', function (event) {
+  var b = event.relatedTarget;
+  document.getElementById('edit_id').value = b.getAttribute('data-id');
+  document.getElementById('edit_dsc').value = b.getAttribute('data-dsc');
+  document.getElementById('edit_depid').value = b.getAttribute('data-depid') || '';
+});
+</script>
+{% endblock %}
