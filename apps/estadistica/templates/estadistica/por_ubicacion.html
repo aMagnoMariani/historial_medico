@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Pacientes por Ubicación</h2>
+        <a href="{% url 'estadistica:dashboard' %}" class="btn btn-outline-secondary rounded-pill">
+            <i class="bi bi-arrow-left"></i> Volver a Estadísticas
+        </a>
+    </div>
+
+    <!-- MIGAS DE PAN: Estado > Municipio > Parroquia > Sector -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            {% for m in datos.migas %}
+            <li class="breadcrumb-item {% if forloop.last %}active{% endif %}">
+                {% if forloop.last %}
+                    {{ m.nombre }}
+                {% else %}
+                    <a href="{% url 'estadistica:por_ubicacion_nivel' m.id %}">{{ m.nombre }}</a>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <p class="text-muted">
+       {% if datos.items %}
+            Seleccione un {{ datos.items.0.nivel|lower }} para ver su detalle.
+        {% else %}
+            Pacientes registrados con dirección en <strong>{{ datos.padre_nombre }}</strong>.
+        {% endif %}
+    </p>
+
+    <!-- TARJETAS POR NIVEL -->
+    {% if datos.items %}
+    <div class="row g-3 mb-4">
+        {% for item in datos.items %}
+        <div class="col-md-3">
+            {% if item.tiene_hijos %}
+            <a href="{% url 'estadistica:por_ubicacion_nivel' item.id %}" class="text-decoration-none">
+                <div class="card card-custom p-3 h-100 text-center">
+                    <div class="fs-2 mb-2 text-primary"><i class="bi bi-geo-alt"></i></div>
+                    <h6 class="fw-bold text-dark mb-1">{{ item.nombre }}</h6>
+                    <div class="text-muted small">{{ item.nivel }}</div>
+                    <div class="fs-3 fw-bold mt-2">{{ item.total }}</div>
+                    <div class="text-muted small">pacientes</div>
+                    <span class="badge bg-primary mt-2">Ver detalle</span>
+                </div>
+            </a>
+            {% else %}
+            <a href="{% url 'estadistica:por_ubicacion_nivel' item.id %}" class="text-decoration-none">
+                <div class="card card-custom p-3 h-100 text-center">
+                    <div class="fs-2 mb-2 text-secondary"><i class="bi bi-pin-map"></i></div>
+                    <h6 class="fw-bold text-dark mb-1">{{ item.nombre }}</h6>
+                    <div class="text-muted small">{{ item.nivel }}</div>
+                    <div class="fs-3 fw-bold mt-2">{{ item.total }}</div>
+                    <div class="text-muted small">pacientes</div>
+                </div>
+            </a>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    <div class="card card-custom p-3 mb-4">
+        <p class="mb-0"><strong>Total en {{ datos.padre_nombre }}:</strong> {{ datos.total }} pacientes</p>
+    </div>
+    {% endif %}
+
+    <!-- PACIENTES DEL NIVEL FINAL -->
+    {% if datos.pacientes %}
+    <div class="card card-custom p-4">
+        <h6 class="fw-bold mb-3">Pacientes en {{ datos.padre_nombre }}</h6>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr><th>ID</th><th>Nombre</th><th>Cédula</th><th>Teléfono</th><th>Sexo</th></tr>
+                </thead>
+                <tbody>
+                    {% for p in datos.pacientes %}
+                    <tr>
+                        <td>{{ p.id }}</td>
+                        <td>{{ p.persona.nombre }} {{ p.persona.apellido }}</td>
+                        <td>{% with ident=p.persona.identificaciones.first %}{% if ident %}{{ ident.valor }}{% else %}-{% endif %}{% endwith %}</td>
+                        <td>{{ p.persona.telefono|default:'-' }}</td>
+                        <td>{{ p.persona.get_sexo_display|default:'-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if not datos.items and not datos.pacientes %}
+    <div class="card card-custom p-4">
+        <p class="text-muted mb-0">No hay pacientes registrados en esta ubicación.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -25,20 +25,15 @@ SECRET_KEY = 'django-insecure-mdbae7e1_z$7onls$m&j==j$1e*t*j02dkd68ciz1d@($d#ke3
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# En desarrollo se acepta el host del cliente de pruebas de Django.
+# En producción revisa esta lista (ver docs/INSTALACION.md).
+ALLOWED_HOSTS = ['testserver', 'localhost', '127.0.0.1'] if DEBUG else []
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'django.contrib.postgres',
-    # Apps del proyecto
+    # Apps del proyecto (antes que admin para AUTH_USER_MODEL)
     'apps.usuarios',
     'apps.identificacion',
     'apps.citas',
@@ -46,12 +41,22 @@ INSTALLED_APPS = [
     'apps.mediciones',
     'apps.antecedentes',
     'apps.estadistica',
+    # Django apps
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'django.contrib.postgres',
 ]
 
 AUTH_USER_MODEL = 'usuarios.Usuario'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # WhiteNoise: sirve los archivos estaticos en produccion (DEBUG=False)
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -59,6 +64,16 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+# Almacenamiento comprimido de los estaticos recopilados (WhiteNoise)
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
 
 ROOT_URLCONF = 'config.urls'
 
@@ -72,6 +87,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'apps.usuarios.context_processors.permisos',
             ],
         },
     },
@@ -133,6 +149,16 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# Archivos estaticos del proyecto (Bootstrap, Bootstrap Icons, fuentes).
+# Se sirven desde la carpeta static/ de la raiz y se recopilan con
+# "python manage.py collectstatic".
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+
+# En produccion, los archivos recopilados se reunen aqui.
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 
 # Email

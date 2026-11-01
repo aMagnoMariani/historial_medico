@@ -1,31 +1,20 @@
 from django.db import models
 
-class AntecedenteCategoria(models.Model):
-    dsc = models.CharField(max_length=100, verbose_name='Descripción')
-    dep_id = models.ForeignKey(
-        'self', models.SET_NULL, null=True, blank=True, 
-        db_column='depid', related_name='hijos'
-    )
-    tipo = models.IntegerField(verbose_name='Nivel/Tipo')
-
-    class Meta:
-        db_table = '"clinica"."antecedente_categoria"'
-        verbose_name = 'Categoría de Antecedente'
-        verbose_name_plural = 'Categorías de Antecedentes'
-
-    def __str__(self):
-        return self.dsc
-
 
 class AntecedentesSalud(models.Model):
-    descrip = models.CharField(max_length=20, verbose_name='Descripción')
-    antecedente_salud_id = models.ForeignKey(
-        AntecedenteCategoria, models.DO_NOTHING, 
-        db_column='antecedente_salud_id'
-    )
-    valor = models.CharField(max_length=255)
+    """Antecedentes de salud del paciente.
+
+    Estructura de ancla:
+        id 0                = NINGUNO
+        tipo: 1 = Categoría (Personal / Familiar), 2 = Antecedente
+        antecedente_salud_id apunta SIEMPRE a una fila: 0 si es raíz
+    """
+    descrip = models.CharField(max_length=20)
+    antecedente_salud_id = models.IntegerField(default=0)
+    valor = models.CharField(max_length=100)
+    tipo = models.IntegerField(default=2)
     paciente = models.ForeignKey(
-        'identificacion.Paciente', 
+        'identificacion.Paciente',
         models.DO_NOTHING, db_column='paciente_id'
     )
 
@@ -34,4 +23,10 @@ class AntecedentesSalud(models.Model):
         verbose_name_plural = 'Antecedentes de salud'
 
     def __str__(self):
-        return f'{self.antecedente_salud_id}: {self.valor}'
+        return f'{self.descrip}: {self.valor}'
+
+    def padre(self):
+        if self.antecedente_salud_id:
+            return AntecedentesSalud.objects.filter(
+                pk=self.antecedente_salud_id).first()
+        return None

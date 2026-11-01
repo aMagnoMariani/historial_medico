@@ -1,55 +1,55 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container-fluid">
-    <h2 class="fw-bold mb-3">Historial Paciente: {{ paciente.persona.nombre }} {{ paciente.persona.apellido }}</h2>
+<h2 class="fw-bold mb-3">Historial Paciente: {{ paciente.persona.nombre }} {{ paciente.persona.apellido }}</h2>
 
-    <ul class="nav nav-tabs mb-4">
-        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#med">Mediciones</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#ant">Antecedentes</button></li>
-        {% if rol_nombre != 'Enfermero' and rol_nombre != 'Enfermera' %}
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#diag">Consultas/Diagnóstico</button></li>
-        {% endif %}
-    </ul>
+<ul class="nav nav-tabs mb-4">
+<li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#med">Mediciones</button></li>
+<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#ant">Antecedentes</button></li>
+{% if rol_nombre != 'Enfermero' and rol_nombre != 'Enfermera' %}
+<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#diag">Consultas/Diagnóstico</button></li>
+{% endif %}
+</ul>
 
-    <div class="tab-content">
-        <div class="tab-pane fade show active" id="med">
-            <div class="card card-custom p-4">
-                <h6>Mediciones Antropométricas</h6>
-                <ul>
-                    {% for m in mediciones %}
-                    <li>{{ m.fecha_toma }} - ID {{ m.id }}</li>
-                    {% empty %}
-                    <li>Sin mediciones</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-        <div class="tab-pane fade" id="ant">
-            <div class="card card-custom p-4">
-                <h6>Antecedentes Médicos</h6>
-                <ul>
-                    {% for a in antecedentes %}
-                    <li>{{ a.antecedente_salud_id.dsc }}: {{ a.valor }}</li>
-                    {% empty %}
-                    <li>Sin antecedentes</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-        {% if rol_nombre != 'Enfermero' and rol_nombre != 'Enfermera' %}
-        <div class="tab-pane fade" id="diag">
-            <div class="card card-custom p-4">
-                <h6>Consultas</h6>
-                <ul>
-                    {% for c in consultas %}
-                    <li>{{ c.cita.fecha_atencion }} - Tipo {{ c.tipo_consulta }}</li>
-                    {% empty %}
-                    <li>Sin consultas</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-        {% endif %}
-    </div>
+<div class="tab-content">
+<div class="tab-pane fade show active" id="med">
+<div class="card card-custom p-4">
+<h6>Mediciones Antropométricas</h6>
+<ul>
+{% for m in mediciones %}
+<li>{{ m.fecha_toma }} - ID {{ m.id }}</li>
+{% empty %}
+<li>Sin mediciones</li>
+{% endfor %}
+</ul>
+</div>
+</div>
+<div class="tab-pane fade" id="ant">
+<div class="card card-custom p-4">
+<h6>Antecedentes Médicos</h6>
+<ul>
+{% for a in antecedentes %}
+<li>{{ a.descrip }}: {{ a.valor }}</li>
+{% empty %}
+<li>Sin antecedentes</li>
+{% endfor %}
+</ul>
+</div>
+</div>
+{% if rol_nombre != 'Enfermero' and rol_nombre != 'Enfermera' %}
+<div class="tab-pane fade" id="diag">
+<div class="card card-custom p-4">
+<h6>Consultas</h6>
+<ul>
+{% for c in consultas %}
+<li>{{ c.cita.fecha_atencion }} - Tipo {{ c.tipo_consulta }}</li>
+{% empty %}
+<li>Sin consultas</li>
+{% endfor %}
+</ul>
+</div>
+</div>
+{% endif %}
+</div>
 </div>
 {% endblock %}

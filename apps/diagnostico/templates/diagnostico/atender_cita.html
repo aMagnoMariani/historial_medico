@@ -1,232 +1,564 @@
 {% extends 'base.html' %}
 {% block content %}
+{% if sin_cita %}
 <div class="container-fluid">
-    <h2 class="fw-bold mb-3">Atender Cita #{{ cita.id }}</h2>
-    <div class="card card-custom p-3 mb-4">
-        <p><strong>Paciente:</strong> {{ cita.paciente.persona.nombre }} {{ cita.paciente.persona.apellido }}</p>
-        <p><strong>Médico:</strong> {{ cita.medico.persona.nombre }} {{ cita.medico.persona.apellido }}</p>
-        <p><strong>Fecha:</strong> {{ cita.fecha_atencion }}</p>
-        <p><strong>Estado:</strong> {{ cita.estado_cita_id }}</p>
-    </div>
-
-    <ul class="nav nav-tabs mb-4" id="attTabs" role="tablist">
-        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#med">Mediciones Antropométricas</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#ante">Antecedentes Médicos</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#diag">Diagnóstico</button></li>
-    </ul>
-
-    <div class="tab-content">
-        <!-- MEDICIONES -->
-        <div class="tab-pane fade show active" id="med">
-            <div class="card card-custom p-4">
-                <form method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="medicion">
-                    <div id="mediciones_container">
-                        <div class="row g-2 medicion-row mb-2 align-items-end">
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold">Tipo de Medición</label>
-                                <select name="equipo_parametro" class="form-select" required>
-                                    <option value="">Seleccione...</option>
-                                    {% for ep in equipo_parametros %}
-                                    <option value="{{ ep.id }}">{{ ep.equipo.nombre }} - {{ ep.parametro.dsc }} ({{ ep.parametro.unidad }})</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label small fw-bold">Valor</label>
-                                <input type="number" step="any" name="valor" class="form-control" required>
-                            </div>
-                            <div class="col-md-2">
-                                <button type="button" class="btn btn-outline-danger btn-sm w-100 quitar-med">Quitar</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mt-3 d-flex gap-2 justify-content-end">
-                        <button type="button" class="btn btn-outline-secondary" id="add_medicion">+ Agregar medición</button>
-                        <button class="btn btn-corporate">Registrar Mediciones</button>
-                    </div>
-                </form>
-                <hr>
-                <h6>Últimas mediciones</h6>
-                <ul>
-                    {% for m in mediciones %}
-                    <li>{{ m.fecha_toma }} - Cabecera ID {{ m.id }}</li>
-                    {% empty %}
-                    <li>Sin mediciones</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-
-        <!-- ANTECEDENTES -->
-        <div class="tab-pane fade" id="ante">
-            <div class="card card-custom p-4">
-                <form method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="antecedente">
-                    <div id="antecedentes_container">
-                        <div class="row g-2 antecedente-row mb-2 align-items-end">
-                            <div class="col-md-5">
-                                <label class="form-label small fw-bold">Categoría</label>
-                                <select name="categoria" class="form-select" required>
-                                    <option value="">Seleccione</option>
-                                    {% for c in categorias %}
-                                    <option value="{{ c.id }}">{{ c.dep_id.dsc }} › {{ c.dsc }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-5">
-                                <label class="form-label small fw-bold">Descripción</label>
-                                <input type="text" name="descripcion" class="form-control" required
-                                       placeholder="Ej: Familia propensa al cáncer / Operación de apéndice">
-                            </div>
-                            <div class="col-md-2">
-                                <button type="button" class="btn btn-outline-danger btn-sm w-100 quitar-ant">Quitar</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mt-3 d-flex gap-2 justify-content-end">
-                        <button type="button" class="btn btn-outline-secondary" id="add_antecedente">+ Agregar antecedente</button>
-                        <button class="btn btn-corporate">Registrar Antecedentes</button>
-                    </div>
-                </form>
-                <hr>
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6>🩺 Antecedentes de Salud</h6>
-                        <ul>
-                            {% for a in antecedentes_salud %}
-                            <li>{{ a.antecedente_salud_id.dsc }}: {{ a.valor }}</li>
-                            {% empty %}
-                            <li>Sin antecedentes de salud</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    <div class="col-md-6">
-                        <h6>👨‍👩‍👧 Antecedentes Familiares (padres)</h6>
-                        <ul>
-                            {% for a in antecedentes_familiares %}
-                            <li>{{ a.antecedente_salud_id.dsc }}: {{ a.valor }}</li>
-                            {% empty %}
-                            <li>Sin antecedentes familiares</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- DIAGNÓSTICO -->
-        <div class="tab-pane fade" id="diag">
-            <div class="card card-custom p-4">
-                <form method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="diagnostico">
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Categoría Enfermedad</label>
-                        <select name="enfermedad_categoria" id="cat_sel" class="form-select">
-                            <option value="">Seleccione categoría</option>
-                            {% for c in catalogo %}
-                            {% if c.depid_id is None %}
-                            <option value="{{ c.id }}">{{ c.dsc }}</option>
-                            {% endif %}
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Enfermedad</label>
-                        <select name="enfermedad" id="enf_sel" class="form-select" required>
-                            <option value="">Primero seleccione categoría</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">Síntomas</label>
-                        <div id="sintomas_container">
-                            <input type="text" name="sintomas" class="form-control mb-2" placeholder="Síntoma">
-                        </div>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" id="add_sintoma">+ Agregar síntoma</button>
-                    </div>
-                    <div class="text-end">
-                        <button class="btn btn-corporate">Finalizar Atención</button>
-                    </div>
-                </form>
-                <hr>
-                <h6>Diagnóstico registrado</h6>
-                <p>Enfermedades:</p>
-                <ul>
-                    {% for e in enfermedades %}
-                    <li>{{ e.valor }}</li>
-                    {% empty %}
-                    <li>Sin enfermedades registradas</li>
-                    {% endfor %}
-                </ul>
-                <p>Síntomas:</p>
-                <ul>
-                    {% for s in sintomas %}
-                    <li>{{ s.sintoma }}</li>
-                    {% empty %}
-                    <li>Sin síntomas</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        </div>
-    </div>
+<h2 class="fw-bold mb-3"> Atención de Pacientes</h2>
+<p class="text-muted">Selecciona una cita en espera para atenderla.</p>
+<div class="card card-custom p-4">
+<table class="table table-hover align-middle">
+<thead class="table-light">
+<tr><th>#</th><th>Paciente</th><th>Médico</th><th>Fecha</th><th class="text-end">Acción</th></tr>
+</thead>
+<tbody>
+{% for c in citas_pendientes %}
+<tr>
+<td>{{ c.id }}</td>
+<td>{{ c.paciente.persona.nombre }} {{ c.paciente.persona.apellido }}</td>
+<td>{{ c.medico.persona.nombre }} {{ c.medico.persona.apellido }}</td>
+<td>{{ c.fecha_atencion }}</td>
+<td class="text-end">
+<a href="{% url 'diagnostico:atender_cita_id' c.id %}" class="btn btn-corporate btn-sm">Atender</a>
+</td>
+</tr>
+{% empty %}
+<tr><td colspan="5" class="text-center text-muted">No hay citas en espera</td></tr>
+{% endfor %}
+</tbody>
+</table>
 </div>
+</div>
+{% else %}
+<div class="container-fluid">
+<h2 class="fw-bold mb-3">Atender Cita #{{ cita.id }}</h2>
+
+<div class="card card-custom p-3 mb-4">
+<div class="row">
+<div class="col-md-4"><strong>Paciente:</strong><br>{{ cita.paciente.persona.nombre }} {{ cita.paciente.persona.apellido }}</div>
+<div class="col-md-4"><strong>Médico:</strong><br>{{ cita.medico.persona.nombre }} {{ cita.medico.persona.apellido }}</div>
+<div class="col-md-2"><strong>Fecha:</strong><br>{{ cita.fecha_atencion }}</div>
+<div class="col-md-2"><strong>Estado:</strong><br>
+{% if cita.estado_cita_id == 1 %}<span class="badge bg-warning text-dark">En espera</span>
+{% elif cita.estado_cita_id == 2 %}<span class="badge bg-success">Atendido</span>
+{% elif cita.estado_cita_id == 3 %}<span class="badge bg-danger">Cancelada</span>
+{% else %}<span class="badge bg-secondary">{{ cita.estado_cita_id }}</span>{% endif %}
+</div>
+</div>
+</div>
+
+<ul class="nav nav-tabs mb-4" id="attTabs" role="tablist">
+<li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#med">Mediciones</button></li>
+<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#ante">Antecedentes</button></li>
+<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#diag">Diagnóstico</button></li>
+</ul>
+
+<div class="tab-content">
+<!-- MEDICIONES -->
+<div class="tab-pane fade show active" id="med">
+<div class="card card-custom p-4">
+<form method="post">
+{% csrf_token %}
+<input type="hidden" name="action" value="medicion">
+<div id="mediciones_container">
+<div class="row g-2 medicion-row mb-2 align-items-end">
+<div class="col-md-5">
+<label class="form-label small fw-bold">Tipo de Medición</label>
+<select name="equipo_parametro" class="form-select" required>
+<option value="">Seleccione...</option>
+{% for ep in equipo_parametros %}
+<option value="{{ ep.id }}">{{ ep.equipo.nombre }} - {{ ep.parametro.dsc }} ({{ ep.parametro.unidad }})</option>
+{% endfor %}
+</select>
+</div>
+<div class="col-md-4">
+<label class="form-label small fw-bold">Valor</label>
+<input type="number" step="any" name="valor" class="form-control" required>
+</div>
+<div class="col-md-3">
+<button type="button" class="btn btn-outline-danger btn-sm w-100 quitar-med">Quitar</button>
+</div>
+</div>
+</div>
+<div class="mt-3 d-flex gap-2 justify-content-end">
+<button type="button" class="btn btn-outline-secondary" id="add_medicion">+ Agregar medición</button>
+<button class="btn btn-corporate">Registrar Mediciones</button>
+</div>
+</form>
+<hr>
+<h6>Últimas mediciones</h6>
+<ul>
+{% for m in mediciones %}
+<li>{{ m.fecha_toma }} — cabecera #{{ m.id }}</li>
+{% empty %}
+<li>Sin mediciones</li>
+{% endfor %}
+</ul>
+</div>
+</div>
+
+<!-- ANTECEDENTES -->
+<div class="tab-pane fade" id="ante">
+<div class="card card-custom p-4">
+<form method="post">
+{% csrf_token %}
+<input type="hidden" name="action" value="antecedente">
+<div id="antecedentes_container">
+<div class="row g-2 antecedente-row mb-2 align-items-end">
+<div class="col-md-4">
+<label class="form-label small fw-bold">Tipo</label>
+<select name="antecedente_tipo" class="form-select" required>
+<option value="">Seleccione</option>
+{% for valor, etiqueta in tipos_antecedente %}
+<option value="{{ valor }}">{{ etiqueta }}</option>
+{% endfor %}
+</select>
+</div>
+<div class="col-md-5">
+<label class="form-label small fw-bold">Descripción</label>
+<input type="text" name="descripcion" class="form-control" required
+placeholder="Ej: Padre hipertenso">
+</div>
+<div class="col-md-3">
+<button type="button" class="btn btn-outline-danger btn-sm w-100 quitar-ant">Quitar</button>
+</div>
+</div>
+</div>
+<div class="mt-3 d-flex gap-2 justify-content-end">
+<button type="button" class="btn btn-outline-secondary" id="add_antecedente">+ Agregar antecedente</button>
+<button class="btn btn-corporate">Registrar Antecedentes</button>
+</div>
+</form>
+<hr>
+<div class="row">
+<div class="col-md-6">
+<h6> Antecedentes Personales</h6>
+<ul>
+{% for a in antecedentes_salud %}
+<li>{{ a.descrip }}: {{ a.valor }}</li>
+{% empty %}<li>Sin antecedentes</li>{% endfor %}
+</ul>
+</div>
+<div class="col-md-6">
+<h6>‍‍ Antecedentes Familiares</h6>
+<ul>
+{% for a in antecedentes_familiares %}
+<li>{{ a.descrip }}: {{ a.valor }}</li>
+{% empty %}<li>Sin antecedentes</li>{% endfor %}
+</ul>
+</div>
+</div>
+</div>
+</div>
+
+<!-- DIAGNOSTICO -->
+<div class="tab-pane fade" id="diag">
+<div class="card card-custom p-4">
+<form method="post">
+{% csrf_token %}
+<input type="hidden" name="action" value="diagnostico">
+
+<!-- 1. SINTOMAS: multiples filas, cada una de distinta categoria -->
+<h6 class="fw-bold mb-3">1. Síntomas</h6>
+<div id="sintomas_container">
+<div class="row g-2 sintoma-row mb-2 align-items-end">
+<div class="col-md-4">
+<label class="form-label small fw-bold">Categoría</label>
+<select name="sintoma_categoria" class="form-select sintoma-cat">
+<option value="">Seleccione categoría...</option>
+{% for s in sintomas_catalogo %}
+<option value="{{ s.id }}">{{ s.dsc }}</option>
+{% endfor %}
+</select>
+</div>
+<div class="col-md-5">
+<label class="form-label small fw-bold">Síntoma</label>
+<select name="sintomas" class="form-select sintoma-select">
+<option value="">Primero elija la categoría...</option>
+</select>
+</div>
+<div class="col-md-3">
+<label class="form-label small fw-bold d-block">&nbsp;</label>
+<button type="button" class="btn btn-outline-danger btn-sm w-100 quitar-sintoma">
+<i class="bi bi-trash"></i> Quitar
+</button>
+</div>
+<div class="col-12 d-none sintoma-otro-wrap">
+<input type="text" name="sintoma_otro" class="form-control sintoma-otro"
+       placeholder="Escriba el síntoma (no está en el catálogo)...">
+</div>
+</div>
+</div>
+<div class="mb-3">
+<button type="button" class="btn btn-sm btn-outline-secondary" id="add_sintoma">
+<i class="bi bi-plus-circle"></i> Agregar otro síntoma
+</button>
+<small class="text-muted ms-2">Puede registrar síntomas de distintas categorías.</small>
+</div>
+
+<hr>
+
+<!-- 2. ENFERMEDADES: multiples filas, cada una de distinta categoria -->
+<h6 class="fw-bold mb-3">2. Enfermedad</h6>
+<div id="enfermedades_container">
+<div class="row g-2 enfermedad-row mb-2 align-items-end">
+<div class="col-md-4">
+<label class="form-label small fw-bold">Categoría</label>
+<select name="enfermedad_categoria" class="form-select enf-cat">
+<option value="">Seleccione categoría...</option>
+{% for c in catalogo %}
+<option value="{{ c.id }}">{{ c.dsc }}</option>
+{% endfor %}
+</select>
+</div>
+<div class="col-md-5">
+<label class="form-label small fw-bold">Enfermedad</label>
+<select name="enfermedad" class="form-select enf-select">
+<option value="">Primero elija la categoría...</option>
+</select>
+</div>
+<div class="col-md-3">
+<label class="form-label small fw-bold d-block">&nbsp;</label>
+<button type="button" class="btn btn-outline-danger btn-sm w-100 quitar-enfermedad">
+<i class="bi bi-trash"></i> Quitar
+</button>
+</div>
+<div class="col-12 d-none enf-otro-wrap">
+<input type="text" name="enfermedad_otro" class="form-control enf-otro"
+       placeholder="Escriba la enfermedad (no está en el catálogo)...">
+</div>
+</div>
+</div>
+<div class="mb-3">
+<button type="button" class="btn btn-sm btn-outline-secondary" id="add_enfermedad">
+<i class="bi bi-plus-circle"></i> Agregar otra enfermedad
+</button>
+<small class="text-muted ms-2">Puede registrar enfermedades de distintas categorías.</small>
+</div>
+
+<hr>
+
+<!-- 3. DESCRIPCION -->
+<h6 class="fw-bold mb-3">3. Descripción del diagnóstico</h6>
+<textarea name="descripcion_diagnostico" class="form-control mb-3" rows="2"
+placeholder="Describa brevemente el diagnóstico..."></textarea>
+
+<hr>
+
+<!-- 4. CONDUCTA -->
+<h6 class="fw-bold mb-3">4. Conducta médica</h6>
+<div class="row g-3 mb-3">
+<div class="col-md-6">
+<label class="form-label small fw-bold">Conducta</label>
+<select name="conducta" class="form-select">
+<option value="">Seleccione...</option>
+{% for valor, etiqueta in conductas %}
+<option value="{{ valor }}">{{ etiqueta }}</option>
+{% endfor %}
+</select>
+</div>
+<div class="col-md-6">
+<label class="form-label small fw-bold">Observaciones</label>
+<input type="text" name="conducta_descripcion" class="form-control"
+placeholder="Observaciones adicionales...">
+</div>
+</div>
+
+<div class="text-end">
+<button class="btn btn-corporate">Finalizar Atención</button>
+</div>
+</form>
+
+<hr>
+<h6>Diagnóstico registrado</h6>
+{% if diagnostico.descr %}<p><strong>Descripción:</strong> {{ diagnostico.descr }}</p>{% endif %}
+<p class="mb-1"><strong>Enfermedades:</strong></p>
+<ul>
+{% for e in enfermedades %}
+<li>{{ e.desc|join:', ' }} — {{ e.valor }}</li>
+{% empty %}<li>Sin enfermedades registradas</li>{% endfor %}
+</ul>
+<p class="mb-1"><strong>Síntomas:</strong></p>
+<ul>
+{% for s in sintomas %}
+<li>
+{% if s.padre %}<span class="text-muted">{{ s.padre.desc }}</span> <strong>{{ s.desc }}</strong>
+{% else %}<strong>{{ s.desc }}</strong>{% endif %}
+</li>
+{% empty %}<li>Sin síntomas</li>{% endfor %}
+</ul>
+{% if diagnostico.conducta %}
+<p class="mb-0"><strong>Conducta médica:</strong>
+<span class="badge bg-primary">{{ diagnostico.conducta.conducta|join:', ' }}</span>
+{% if diagnostico.conducta.descripcion %}<br><span class="text-muted">{{ diagnostico.conducta.descripcion }}</span>{% endif %}
+</p>
+{% endif %}
+</div>
+</div>
+</div>
+</div>
+
 <script>
-const medContainer = document.getElementById('mediciones_container');
-document.getElementById('add_medicion')?.addEventListener('click', function(){
-    const row = medContainer.querySelector('.medicion-row');
-    const clone = row.cloneNode(true);
-    clone.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
-    clone.querySelectorAll('input').forEach(i => i.value = '');
-    medContainer.appendChild(clone);
-});
-medContainer?.addEventListener('click', function(e){
-    const btn = e.target.closest('.quitar-med');
-    if (btn && medContainer.querySelectorAll('.medicion-row').length > 1) {
-        btn.closest('.medicion-row').remove();
-    }
-});
-const antContainer = document.getElementById('antecedentes_container');
-document.getElementById('add_antecedente')?.addEventListener('click', function(){
-    const row = antContainer.querySelector('.antecedente-row');
-    const clone = row.cloneNode(true);
-    clone.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
-    clone.querySelectorAll('input').forEach(i => i.value = '');
-    antContainer.appendChild(clone);
-});
-antContainer?.addEventListener('click', function(e){
-    const btn = e.target.closest('.quitar-ant');
-    if (btn && antContainer.querySelectorAll('.antecedente-row').length > 1) {
-        btn.closest('.antecedente-row').remove();
-    }
-});
-document.getElementById('add_sintoma')?.addEventListener('click', function(){
-    const container = document.getElementById('sintomas_container');
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.name = 'sintomas';
-    input.className = 'form-control mb-2';
-    input.placeholder = 'Síntoma';
-    container.appendChild(input);
-});
+// // Catalogo de enfermedades: categoria -> lista de enfermedades
 const catalogoData = [
-    {% for e in catalogo %}
-    {id: {{ e.id }}, dsc: "{{ e.dsc|escapejs }}", depid: {{ e.depid_id|default:'null' }}},
-    {% endfor %}
+{% for c in catalogo %}{
+id: {{ c.id }},
+dsc: "{{ c.dsc|escapejs }}",
+enfermedades: [{% for e in c.enfermedades %}"{{ e|escapejs }}",{% endfor %}]
+},{% endfor %}
 ];
-const catSel = document.getElementById('cat_sel');
-const enfSel = document.getElementById('enf_sel');
-catSel?.addEventListener('change', function(){
-    const pid = parseInt(this.value);
-    enfSel.innerHTML = '<option value="">Seleccione enfermedad</option>';
-    catalogoData.filter(e => e.depid === pid).forEach(e => {
-        const opt = document.createElement('option');
-        opt.value = e.dsc;
-        opt.textContent = e.dsc;
-        enfSel.appendChild(opt);
-    });
+
+// Catalogo de sintomas: categoria -> lista de sintomas
+const sintomasData = [
+{% for s in sintomas_catalogo %}{
+id: {{ s.id }},
+dsc: "{{ s.dsc|escapejs }}",
+sintomas: [{% for x in s.sintomas %}"{{ x|escapejs }}",{% endfor %}]
+},{% endfor %}
+];
+
+document.addEventListener('DOMContentLoaded', function () {
+// --- Mediciones: agregar / quitar ---
+const medContainer = document.getElementById('mediciones_container');
+const addMedBtn = document.getElementById('add_medicion');
+if (addMedBtn && medContainer) {
+addMedBtn.addEventListener('click', function () {
+medContainer.insertAdjacentHTML('beforeend', `
+<div class="row g-2 medicion-row mb-2 align-items-end">
+<div class="col-md-5">
+<label class="form-label small fw-bold">Tipo de Medición</label>
+<select name="equipo_parametro" class="form-select" required>
+<option value="">Seleccione...</option>
+{% for ep in equipo_parametros %}
+<option value="{{ ep.id }}">{{ ep.equipo.nombre }} - {{ ep.parametro.dsc }} ({{ ep.parametro.unidad }})</option>
+{% endfor %}
+</select>
+</div>
+<div class="col-md-4">
+<label class="form-label small fw-bold">Valor</label>
+<input type="number" step="any" name="valor" class="form-control" required>
+</div>
+<div class="col-md-3">
+<button type="button" class="btn btn-outline-danger btn-sm w-100 quitar-med">Quitar</button>
+</div>
+</div>`);
+});
+medContainer.addEventListener('click', function (e) {
+const btn = e.target.closest('.quitar-med');
+if (btn && medContainer.querySelectorAll('.medicion-row').length > 1) btn.closest('.medicion-row').remove();
+});
+}
+
+// --- Antecedentes: agregar / quitar ---
+const antContainer = document.getElementById('antecedentes_container');
+const addAntBtn = document.getElementById('add_antecedente');
+if (addAntBtn && antContainer) {
+addAntBtn.addEventListener('click', function () {
+antContainer.insertAdjacentHTML('beforeend', `
+<div class="row g-2 antecedente-row mb-2 align-items-end">
+<div class="col-md-4">
+<label class="form-label small fw-bold">Tipo</label>
+<select name="antecedente_tipo" class="form-select" required>
+<option value="">Seleccione</option>
+{% for valor, etiqueta in tipos_antecedente %}
+<option value="{{ valor }}">{{ etiqueta }}</option>
+{% endfor %}
+</select>
+</div>
+<div class="col-md-5">
+<label class="form-label small fw-bold">Descripción</label>
+<input type="text" name="descripcion" class="form-control" required>
+</div>
+<div class="col-md-3">
+<button type="button" class="btn btn-outline-danger btn-sm w-100 quitar-ant">Quitar</button>
+</div>
+</div>`);
+});
+antContainer.addEventListener('click', function (e) {
+const btn = e.target.closest('.quitar-ant');
+if (btn && antContainer.querySelectorAll('.antecedente-row').length > 1) btn.closest('.antecedente-row').remove();
+});
+}
+
+// --- Sintomas: filas dinamicas, cada una con su propia categoria ---
+// sintomasData se genera mas abajo con el catalogo de Django
+function filaSintomaHTML() {
+return `
+<div class="row g-2 sintoma-row mb-2 align-items-end">
+<div class="col-md-4">
+<label class="form-label small fw-bold">Categoría</label>
+<select name="sintoma_categoria" class="form-select sintoma-cat">
+<option value="">Seleccione categoría...</option>
+{% for s in sintomas_catalogo %}
+<option value="{{ s.id }}">{{ s.dsc }}</option>
+{% endfor %}
+</select>
+</div>
+<div class="col-md-5">
+<label class="form-label small fw-bold">Síntoma</label>
+<select name="sintomas" class="form-select sintoma-select">
+<option value="">Primero elija la categoría...</option>
+</select>
+</div>
+<div class="col-md-3">
+<label class="form-label small fw-bold d-block">&nbsp;</label>
+<button type="button" class="btn btn-outline-danger btn-sm w-100 quitar-sintoma">
+<i class="bi bi-trash"></i> Quitar
+</button>
+</div>
+<div class="col-12 d-none sintoma-otro-wrap">
+<input type="text" name="sintoma_otro" class="form-control sintoma-otro"
+       placeholder="Escriba el síntoma (no está en el catálogo)...">
+</div>
+</div>`;
+}
+
+// Conecta los eventos de una fila de sintoma
+function activarFilaSintoma(fila) {
+const catSel = fila.querySelector('.sintoma-cat');
+const sinSel = fila.querySelector('.sintoma-select');
+const otroWrap = fila.querySelector('.sintoma-otro-wrap');
+const otroInput = fila.querySelector('.sintoma-otro');
+
+// Al cambiar la categoria se recargan los sintomas de ESA fila
+catSel.addEventListener('change', function () {
+const cat = sintomasData.find(c => String(c.id) === String(this.value));
+sinSel.innerHTML = '<option value="">Seleccione síntoma...</option>';
+if (cat) cat.sintomas.forEach(function (nombre) {
+const opt = document.createElement('option');
+opt.value = nombre;
+opt.textContent = nombre;
+sinSel.appendChild(opt);
+});
+// Opcion para escribir un sintoma que no esta en el catalogo
+const optOtro = document.createElement('option');
+optOtro.value = '__OTRO__';
+optOtro.textContent = '— Otro (escribir) —';
+sinSel.appendChild(optOtro);
+otroWrap.classList.add('d-none');
+otroInput.value = '';
+});
+
+// Si elige "otro", se muestra el campo de texto
+sinSel.addEventListener('change', function () {
+if (this.value === '__OTRO__') {
+otroWrap.classList.remove('d-none');
+otroInput.focus();
+} else {
+otroWrap.classList.add('d-none');
+otroInput.value = '';
+}
+});
+}
+
+const sinContainer = document.getElementById('sintomas_container');
+if (sinContainer) {
+// Activar la primera fila
+activarFilaSintoma(sinContainer.querySelector('.sintoma-row'));
+
+// Boton "Agregar otro sintoma"
+document.getElementById('add_sintoma').addEventListener('click', function () {
+sinContainer.insertAdjacentHTML('beforeend', filaSintomaHTML());
+activarFilaSintoma(sinContainer.lastElementChild);
+});
+
+// Boton "Quitar" (delegado: funciona tambien en filas nuevas)
+sinContainer.addEventListener('click', function (e) {
+const btn = e.target.closest('.quitar-sintoma');
+if (btn && sinContainer.querySelectorAll('.sintoma-row').length > 1) {
+btn.closest('.sintoma-row').remove();
+}
+});
+}
+
+// --- Enfermedades: filas dinamicas, cada una con su propia categoria ---
+function filaEnfermedadHTML() {
+return `
+<div class="row g-2 enfermedad-row mb-2 align-items-end">
+<div class="col-md-4">
+<label class="form-label small fw-bold">Categoría</label>
+<select name="enfermedad_categoria" class="form-select enf-cat">
+<option value="">Seleccione categoría...</option>
+{% for c in catalogo %}
+<option value="{{ c.id }}">{{ c.dsc }}</option>
+{% endfor %}
+</select>
+</div>
+<div class="col-md-5">
+<label class="form-label small fw-bold">Enfermedad</label>
+<select name="enfermedad" class="form-select enf-select">
+<option value="">Primero elija la categoría...</option>
+</select>
+</div>
+<div class="col-md-3">
+<label class="form-label small fw-bold d-block">&nbsp;</label>
+<button type="button" class="btn btn-outline-danger btn-sm w-100 quitar-enfermedad">
+<i class="bi bi-trash"></i> Quitar
+</button>
+</div>
+<div class="col-12 d-none enf-otro-wrap">
+<input type="text" name="enfermedad_otro" class="form-control enf-otro"
+       placeholder="Escriba la enfermedad (no está en el catálogo)...">
+</div>
+</div>`;
+}
+
+// Conecta los eventos de una fila de enfermedad
+function activarFilaEnfermedad(fila) {
+const catSel = fila.querySelector('.enf-cat');
+const enfSel = fila.querySelector('.enf-select');
+const otroWrap = fila.querySelector('.enf-otro-wrap');
+const otroInput = fila.querySelector('.enf-otro');
+
+// Al cambiar la categoria se recargan las enfermedades de ESA fila
+catSel.addEventListener('change', function () {
+const cat = catalogoData.find(c => String(c.id) === String(this.value));
+enfSel.innerHTML = '<option value="">Seleccione enfermedad...</option>';
+if (cat) cat.enfermedades.forEach(function (nombre) {
+const opt = document.createElement('option');
+opt.value = nombre;
+opt.textContent = nombre;
+enfSel.appendChild(opt);
+});
+// Opcion para escribir una enfermedad que no esta en el catalogo
+const optOtro = document.createElement('option');
+optOtro.value = '__OTRO__';
+optOtro.textContent = '— Otro (escribir) —';
+enfSel.appendChild(optOtro);
+otroWrap.classList.add('d-none');
+otroInput.value = '';
+});
+
+// Si elige "otro", se muestra el campo de texto
+enfSel.addEventListener('change', function () {
+if (this.value === '__OTRO__') {
+otroWrap.classList.remove('d-none');
+otroInput.focus();
+} else {
+otroWrap.classList.add('d-none');
+otroInput.value = '';
+}
+});
+}
+
+const enfContainer = document.getElementById('enfermedades_container');
+if (enfContainer) {
+// Activar la primera fila
+activarFilaEnfermedad(enfContainer.querySelector('.enfermedad-row'));
+
+// Boton "Agregar otra enfermedad"
+document.getElementById('add_enfermedad').addEventListener('click', function () {
+enfContainer.insertAdjacentHTML('beforeend', filaEnfermedadHTML());
+activarFilaEnfermedad(enfContainer.lastElementChild);
+});
+
+// Boton "Quitar" (delegado: funciona tambien en filas nuevas)
+enfContainer.addEventListener('click', function (e) {
+const btn = e.target.closest('.quitar-enfermedad');
+if (btn && enfContainer.querySelectorAll('.enfermedad-row').length > 1) {
+btn.closest('.enfermedad-row').remove();
+}
+});
+}
 });
 </script>
+{% endif %}
 {% endblock %}

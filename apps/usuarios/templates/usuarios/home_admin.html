@@ -1,62 +1,62 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold">Panel de Control <span class="text-muted fs-5">Administrador</span></h2>
-    </div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+<h2 class="fw-bold">Panel de Control <span class="text-muted fs-5">Administrador</span></h2>
+</div>
 
-    <div class="row g-4">
-        <div class="col-md-3">
-            <div class="card card-custom p-4 bg-pastel-blue border-0 text-center">
-                <div class="display-6 fw-bold text-primary">{{ total_pacientes }}</div>
-                <div class="text-muted small fw-bold">TOTAL PACIENTES</div>
-                <i class="bi bi-people fs-1 opacity-25 position-absolute end-0 bottom-0 m-3"></i>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card card-custom p-4 border-0 text-center" style="border-left: 5px solid #ffc107 !important;">
-                <div class="display-6 fw-bold text-warning">{{ pacientes_espera }}</div>
-                <div class="text-muted small fw-bold">PACIENTES EN ESPERA</div>
-                <i class="bi bi-clock-history fs-1 opacity-25 position-absolute end-0 bottom-0 m-3"></i>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card card-custom p-4 border-0 text-center" style="border-left: 5px solid var(--corporate-blue) !important;">
-                <div class="display-6 fw-bold text-primary">{{ total_medicos }}</div>
-                <div class="text-muted small fw-bold">MÉDICOS ACTIVOS</div>
-                <i class="bi bi-person-badge fs-1 opacity-25 position-absolute end-0 bottom-0 m-3"></i>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card card-custom p-4 border-0 text-center" style="border-left: 5px solid #28a745 !important;">
-                <div class="display-6 fw-bold text-success">{{ total_especialidades }}</div>
-                <div class="text-muted small fw-bold">ESPECIALIDADES</div>
-                <i class="bi bi-list-stars fs-1 opacity-25 position-absolute end-0 bottom-0 m-3"></i>
-            </div>
-        </div>
-    </div>
+<div class="row g-4">
+<div class="col-md-3">
+<div class="card card-custom p-4 bg-pastel-blue border-0 text-center">
+<div class="display-6 fw-bold text-primary">{{ total_pacientes }}</div>
+<div class="text-muted small fw-bold">TOTAL PACIENTES</div>
+<i class="bi bi-people fs-1 opacity-25 position-absolute end-0 bottom-0 m-3"></i>
+</div>
+</div>
+<div class="col-md-3">
+<div class="card card-custom p-4 border-0 text-center" style="border-left: 5px solid #ffc107 !important;">
+<div class="display-6 fw-bold text-warning">{{ pacientes_espera }}</div>
+<div class="text-muted small fw-bold">PACIENTES EN ESPERA</div>
+<i class="bi bi-clock-history fs-1 opacity-25 position-absolute end-0 bottom-0 m-3"></i>
+</div>
+</div>
+<div class="col-md-3">
+<div class="card card-custom p-4 border-0 text-center" style="border-left: 5px solid var(--corporate-blue) !important;">
+<div class="display-6 fw-bold text-primary">{{ total_medicos }}</div>
+<div class="text-muted small fw-bold">MÉDICOS ACTIVOS</div>
+<i class="bi bi-person-badge fs-1 opacity-25 position-absolute end-0 bottom-0 m-3"></i>
+</div>
+</div>
+<div class="col-md-3">
+<div class="card card-custom p-4 border-0 text-center" style="border-left: 5px solid #28a745 !important;">
+<div class="display-6 fw-bold text-success">{{ total_especialidades }}</div>
+<div class="text-muted small fw-bold">ESPECIALIDADES</div>
+<i class="bi bi-list-stars fs-1 opacity-25 position-absolute end-0 bottom-0 m-3"></i>
+</div>
+</div>
+</div>
 
-    <div class="row mt-5">
-        <div class="col-md-8">
-            <div class="card card-custom p-4">
-                <h5 class="fw-bold mb-3">Acciones Rápidas</h5>
-                <div class="d-flex gap-3">
-                    <a href="{% url 'identificacion:registrar_paciente' %}" class="btn btn-corporate px-4">
-                        <i class="bi bi-plus-circle"></i> Registrar Paciente
-                    </a>
-                    <a href="/admin/identificacion/medico/" class="btn btn-outline-primary px-4">
-                        <i class="bi bi-person-plus"></i> Nuevo Médico
-                    </a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card card-custom p-4 bg-pastel-blue border-0">
-                <h5 class="fw-bold mb-2">Estado del Sistema</h5>
-                <p class="small text-muted">Todos los módulos están operativos. El sistema de permisos está activo.</p>
-                <a href="{% url 'estadistica:dashboard' %}" class="btn btn-sm btn-primary w-100">Ver Estadísticas Detalladas</a>
-            </div>
-        </div>
-    </div>
+<div class="row mt-5">
+<div class="col-md-8">
+<div class="card card-custom p-4">
+<h5 class="fw-bold mb-3">Acciones Rápidas</h5>
+<div class="d-flex gap-3">
+<a href="{% url 'identificacion:registrar_paciente' %}" class="btn btn-corporate px-4">
+<i class="bi bi-plus-circle"></i> Registrar Paciente
+</a>
+<a href="/admin/identificacion/medico/" class="btn btn-outline-primary px-4">
+<i class="bi bi-person-plus"></i> Nuevo Médico
+</a>
+</div>
+</div>
+</div>
+<div class="col-md-4">
+<div class="card card-custom p-4 bg-pastel-blue border-0">
+<h5 class="fw-bold mb-2">Estado del Sistema</h5>
+<p class="small text-muted">Todos los módulos están operativos. El sistema de permisos está activo.</p>
+<a href="{% url 'estadistica:dashboard' %}" class="btn btn-sm btn-primary w-100">Ver Estadísticas Detalladas</a>
+</div>
+</div>
+</div>
 </div>
 {% endblock %}

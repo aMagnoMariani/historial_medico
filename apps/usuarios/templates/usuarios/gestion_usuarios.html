@@ -2,35 +2,39 @@
 {% block content %}
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold">👥 Gestión de Usuarios</h2>
+        <h2 class="fw-bold">Usuarios, Roles y Permisos</h2>
     </div>
+    <p class="text-muted">
+        Elige un <strong>rol predefinido</strong> y ajusta los permisos del usuario por módulo.
+        El permiso de <strong>Eliminar</strong> solo lo puede habilitar el administrador.
+    </p>
 
-    <ul class="nav nav-tabs mb-4" id="usrTabs" role="tablist">
-        <li class="nav-item">
-            <button class="nav-link active" id="list-tab" data-bs-toggle="tab" data-bs-target="#list" type="button">Lista</button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link" id="create-tab" data-bs-toggle="tab" data-bs-target="#create" type="button">Crear</button>
-        </li>
+    {# Los mensajes de Django se muestran con AlertifyJS (ver base.html) #}
+    {% if messages %}
+    {% for m in messages %}
+    <span hidden data-notify="{{ m.tags|default:'info' }}" data-notify-texto="{{ m }}"></span>
+    {% endfor %}
+    {% endif %}
+
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#lista"><i class="bi bi-list"></i> Lista</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#nuevo"><i class="bi bi-person-plus"></i> Nuevo Usuario</button></li>
+        {% if 'roles.ver' in permisos_usuario %}
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#roles"><i class="bi bi-shield-lock"></i> Roles</button></li>
+        {% endif %}
     </ul>
 
     <div class="tab-content">
-        <!-- LISTA -->
-        <div class="tab-pane fade show active" id="list" role="tabpanel">
+        <!-- ================= LISTA ================= -->
+        <div class="tab-pane fade show active" id="lista">
             <div class="card card-custom p-4">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead class="table-light">
                             <tr>
-                                <th>ID</th>
-                                <th>Nombre</th>
-                                <th>Cédula</th>
-                                <th>Teléfono</th>
-                                <th>Edad</th>
-                                <th>Rol</th>
-                                <th>Usuario</th>
-                                <th>Estado</th>
-                                <th class="text-end">Acciones</th>
+                                <th>ID</th><th>Nombre</th><th>Cédula</th><th>Teléfono</th>
+                                <th>Sexo</th><th>Rol</th><th>Usuario</th><th>Permisos</th>
+                                <th>Estado</th><th class="text-end">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -39,17 +43,41 @@
                             <tr>
                                 <td>{{ u.id }}</td>
                                 <td>{{ u.persona.nombre }} {{ u.persona.apellido }}</td>
-                                <td>{% if ident %}{{ ident.valor }}{% endif %}</td>
-                                <td>{{ u.persona.telefono }}</td>
-                                <td>{% if u.persona.fecha_nacimiento %}{{ u.persona.fecha_nacimiento|date:"Y" }}{% endif %}</td>
-                                <td>{{ u.rol.nombre|default:"-" }}</td>
+                                <td>{% if ident %}{{ ident.descripcion }} {{ ident.valor }}{% else %}-{% endif %}</td>
+                                <td>{{ u.persona.telefono|default:'-' }}</td>
+                                <td>{{ u.persona.get_sexo_display|default:'-' }}</td>
+                                <td><span class="badge bg-primary">{{ u.rol.nombre|default:'Sin rol' }}</span></td>
                                 <td>{{ u.username }}</td>
+                                <td><span class="badge bg-light text-dark">{{ u.permisos.count }}</span></td>
                                 <td>
-                                    {% if u.is_active %}<span class="badge bg-success">Activo</span>{% else %}<span class="badge bg-secondary">Inactivo</span>{% endif %}
+                                    {% if u.is_active %}<span class="badge bg-success">Activo</span>
+                                    {% else %}<span class="badge bg-secondary">Inactivo</span>{% endif %}
                                 </td>
                                 <td class="text-end">
-                                    <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#modalView" data-id="{{ u.id }}" data-nombre="{{ u.persona.nombre }}" data-apellido="{{ u.persona.apellido }}" data-cedula="{{ ident.valor|default:'' }}" data-telefono="{{ u.persona.telefono }}" data-edad="{{ u.persona.fecha_nacimiento }}" data-rol="{{ u.rol.nombre|default:'' }}" data-usuario="{{ u.username }}" data-clave="******">Ver</button>
-                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalEdit" data-id="{{ u.id }}" data-nombre="{{ u.persona.nombre }}" data-apellido="{{ u.persona.apellido }}" data-cedula="{{ ident.valor|default:'' }}" data-telefono="{{ u.persona.telefono }}" data-edad="{{ u.persona.fecha_nacimiento }}" data-rol="{{ u.rol.id }}" data-usuario="{{ u.username }}">Modificar</button>
+                                    <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#modalVer"
+                                            data-id="{{ u.id }}"
+                                            data-nombre="{{ u.persona.nombre }}"
+                                            data-apellido="{{ u.persona.apellido }}"
+                                            data-cedula="{{ ident.valor|default:'' }}"
+                                            data-telefono="{{ u.persona.telefono|default:'' }}"
+                                            data-sexo="{{ u.persona.get_sexo_display|default:'' }}"
+                                            data-rol="{{ u.rol.nombre|default:'' }}"
+                                            data-usuario="{{ u.username }}"
+                                            data-permisos="{{ u.codigos_permisos|join:',' }}">
+                                        Ver
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalEditar"
+                                            data-id="{{ u.id }}"
+                                            data-nombre="{{ u.persona.nombre }}"
+                                            data-apellido="{{ u.persona.apellido }}"
+                                            data-cedula="{{ ident.valor|default:'' }}"
+                                            data-telefono="{{ u.persona.telefono|default:'' }}"
+                                            data-sexo="{{ u.persona.sexo|default:'' }}"
+                                            data-rol="{{ u.rol_id|default:'' }}"
+                                            data-usuario="{{ u.username }}"
+                                            data-permisos="{{ u.codigos_permisos|join:',' }}">
+                                        Modificar
+                                    </button>
                                     {% if u.is_active %}
                                     <form method="post" class="d-inline">
                                         {% csrf_token %}
@@ -65,11 +93,19 @@
                                         <button class="btn btn-sm btn-outline-success">Activar</button>
                                     </form>
                                     {% endif %}
+                                    {% if puede_eliminar and u.id != request.user.id %}
+                                    <form method="post" class="d-inline" onsubmit="return confirm('¿Eliminar este usuario? Esta acción no se puede deshacer.');">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="eliminar">
+                                        <input type="hidden" name="id" value="{{ u.id }}">
+                                        <button class="btn btn-sm btn-outline-danger">Eliminar</button>
+                                    </form>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endwith %}
                             {% empty %}
-                            <tr><td colspan="9" class="text-center text-muted">Sin usuarios</td></tr>
+                            <tr><td colspan="10" class="text-center text-muted">Sin usuarios</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -77,51 +113,205 @@
             </div>
         </div>
 
-        <!-- CREAR -->
-        <div class="tab-pane fade" id="create" role="tabpanel">
+        <!-- ================= ROLES ================= -->
+        <div class="tab-pane fade" id="roles">
             <div class="card card-custom p-4">
-                <form method="post">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0">Roles del sistema</h6>
+                    {% if 'roles.crear' in permisos_usuario %}
+                    <button class="btn btn-corporate btn-sm" data-bs-toggle="modal" data-bs-target="#modalNuevoRol">
+                        <i class="bi bi-plus-circle"></i> Nuevo Rol
+                    </button>
+                    {% endif %}
+                </div>
+                <p class="text-muted small">
+                    Los roles predefinidos no se pueden eliminar ni renombrar, pero sí ajustar sus permisos.
+                    El permiso de <strong>Eliminar</strong> solo lo puede tener el administrador.
+                </p>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th><th>Rol</th><th>Descripción</th>
+                                <th>Permisos</th><th>Usuarios</th><th>Tipo</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in todos_los_roles %}
+                            <tr>
+                                <td>{{ r.id }}</td>
+                                <td><strong>{{ r.nombre }}</strong></td>
+                                <td class="small">{{ r.descripcion|default:'—' }}</td>
+                                <td><span class="badge bg-light text-dark">{{ r.permisos.count }}</span></td>
+                                <td><span class="badge bg-light text-dark">{{ r.usuario_set.count }}</span></td>
+                                <td>
+                                    {% if r.predefinido %}<span class="badge bg-secondary">Predefinido</span>
+                                    {% else %}<span class="badge bg-info">Personalizado</span>{% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if 'roles.editar' in permisos_usuario %}
+                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalPermisosRol"
+                                            data-id="{{ r.id }}" data-nombre="{{ r.nombre }}"
+                                            data-esadmin="{% if r.nombre|lower == 'superadmin' %}1{% else %}0{% endif %}"
+                                            data-permisos="{{ r.codigos_permisos|join:',' }}">
+                                        <i class="bi bi-shield-check"></i> Permisos
+                                    </button>
+                                    {% endif %}
+                                    {% if not r.predefinido and 'roles.editar' in permisos_usuario %}
+                                    <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#modalEditarRol"
+                                            data-id="{{ r.id }}" data-nombre="{{ r.nombre }}"
+                                            data-desc="{{ r.descripcion|default:'' }}">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <form method="post" class="d-inline" id="form-elim-rol-{{ r.id }}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="eliminar_rol">
+                                        <input type="hidden" name="rol_id" value="{{ r.id }}">
+                                        <button type="button" class="btn btn-sm btn-outline-danger btn-elim-rol"
+                                                data-nombre="{{ r.nombre }}">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= NUEVO ================= -->
+        <div class="tab-pane fade" id="nuevo">
+            <div class="card card-custom p-4">
+                <form method="post" id="formUsuario">
                     {% csrf_token %}
                     <input type="hidden" name="action" value="crear">
+
+                    <h6 class="fw-bold mb-3">Datos de la persona</h6>
                     <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Nombre</label>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Nombre *</label>
                             <input type="text" name="nombre" class="form-control" required>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Apellido</label>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Apellido *</label>
                             <input type="text" name="apellido" class="form-control" required>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Cédula</label>
-                            <input type="text" name="cedula" class="form-control" required>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Cédula *</label>
+                            <div class="input-group">
+                                <select name="identificacion_tipo_id" class="form-select" style="max-width:140px">
+                                    <option value="">Tipo</option>
+                                    {% for t in tipos_identificacion %}
+                                    <option value="{{ t.id }}">{{ t.descripcion }}</option>
+                                    {% endfor %}
+                                </select>
+                                <input type="text" name="cedula" class="form-control" required>
+                                <input type="hidden" name="identificacion_tipo_desc" value="Cedula">
+                            </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label small fw-bold">Teléfono</label>
-                            <input type="text" name="telefono" class="form-control">
+                            <input type="text" name="telefono" class="form-control" placeholder="0412-1234567">
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Edad</label>
-                            <input type="number" name="edad" class="form-control" required>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Sexo *</label>
+                            <select name="sexo" class="form-select" required>
+                                <option value="M">Masculino</option>
+                                <option value="F">Femenino</option>
+                                <option value="O">Otro</option>
+                            </select>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Rol</label>
-                            <select name="rol_id" class="form-select">
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Fecha de nacimiento</label>
+                            <input type="date" name="fecha_nacimiento" class="form-control">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Dirección</label>
+                            <select name="direccion_id" class="form-select">
                                 <option value="">Seleccione...</option>
+                                {% for e in estados %}
+                                <option value="{{ e.id }}">{{ e.valor }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Etnia</label>
+                            <select name="etnia_id" class="form-select">
+                                <option value="">Seleccione...</option>
+                                {% for e in etnias %}<option value="{{ e.id }}">{{ e.tipo_etnia }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Tipo de sangre</label>
+                            <select name="sangre_id" class="form-select">
+                                <option value="">Seleccione...</option>
+                                {% for s in sangre %}<option value="{{ s.id }}">{{ s.tipo_sangre }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold">Discapacidad</label>
+                            <select name="discapacidad_id" class="form-select">
+                                <option value="">Seleccione...</option>
+                                {% for d in discapacidades %}<option value="{{ d.id }}">{{ d.discapacidad }}</option>{% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <h6 class="fw-bold mb-3">Acceso al sistema</h6>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">Rol *</label>
+                            <select name="rol_id" id="sel_rol" class="form-select" required>
+                                <option value="">Seleccione un rol...</option>
                                 {% for r in roles %}
                                 <option value="{{ r.id }}">{{ r.nombre }}</option>
                                 {% endfor %}
                             </select>
+                            <small class="text-muted">Al elegir el rol se pre-cargan sus permisos.</small>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label small fw-bold">Usuario</label>
+                            <label class="form-label small fw-bold">Usuario *</label>
                             <input type="text" name="usuario" class="form-control" required>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label small fw-bold">Clave</label>
-                            <input type="password" name="clave" class="form-control" required>
+                            <label class="form-label small fw-bold">Contraseña *</label>
+                            <input type="password" name="clave" class="form-control" required minlength="4">
                         </div>
                     </div>
+
+                    <hr class="my-4">
+
+                    <!-- PERMISOS POR MÓDULO -->
+                    <h6 class="fw-bold mb-3">Permisos del usuario</h6>
+                    <div class="row g-3">
+                        {% for m in modulos %}
+                        <div class="col-md-4">
+                            <div class="border rounded-3 p-3 h-100">
+                                <div class="fw-bold small mb-2">{{ m.nombre }}</div>
+                                {% for p in m.permisos %}
+                                <div class="form-check">
+                                    <input class="form-check-input perm-check" type="checkbox"
+                                           name="permisos" value="{{ p.codigo }}"
+                                           id="perm_{{ p.codigo }}"
+                                           data-modulo="{{ m.clave }}"
+                                           {% if p.es_eliminar and not puede_eliminar %}disabled title="Solo el administrador puede eliminar"{% endif %}>
+                                    <label class="form-check-label small {% if p.es_eliminar and not puede_eliminar %}text-muted{% endif %}"
+                                           for="perm_{{ p.codigo }}">
+                                        {{ p.nombre }}{% if p.es_eliminar and not puede_eliminar %} (solo admin){% endif %}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
                     <div class="mt-4 text-end">
                         <button type="submit" class="btn btn-corporate px-4 fw-bold">Guardar Usuario</button>
                     </div>
@@ -131,75 +321,83 @@
     </div>
 </div>
 
-<!-- Modal Ver -->
-<div class="modal fade" id="modalView" tabindex="-1">
-  <div class="modal-dialog">
+<!-- ================= MODAL VER ================= -->
+<div class="modal fade" id="modalVer" tabindex="-1">
+  <div class="modal-dialog modal-lg">
     <div class="modal-content rounded-4">
       <div class="modal-header">
         <h5 class="modal-title fw-bold">Detalles del Usuario</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <button type="button" class="btn btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <p><strong>Nombre:</strong> <span id="view_nombre"></span> <span id="view_apellido"></span></p>
-        <p><strong>Cédula:</strong> <span id="view_cedula"></span></p>
-        <p><strong>Teléfono:</strong> <span id="view_telefono"></span></p>
-        <p><strong>Edad/Fecha Nac:</strong> <span id="view_edad"></span></p>
-        <p><strong>Rol:</strong> <span id="view_rol"></span></p>
-        <p><strong>Usuario:</strong> <span id="view_usuario"></span></p>
-        <p><strong>Clave:</strong> <span id="view_clave"></span></p>
+        <div class="row mb-3">
+          <div class="col-md-6"><strong>Nombre:</strong> <span id="v_nombre"></span> <span id="v_apellido"></span></div>
+          <div class="col-md-6"><strong>Cédula:</strong> <span id="v_cedula"></span></div>
+          <div class="col-md-6"><strong>Teléfono:</strong> <span id="v_telefono"></span></div>
+          <div class="col-md-6"><strong>Sexo:</strong> <span id="v_sexo"></span></div>
+          <div class="col-md-6"><strong>Rol:</strong> <span id="v_rol"></span></div>
+          <div class="col-md-6"><strong>Usuario:</strong> <span id="v_usuario"></span></div>
+        </div>
+        <h6 class="fw-bold">Permisos</h6>
+        <div id="v_permisos" class="d-flex flex-wrap gap-1"></div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Modal Editar -->
-<div class="modal fade" id="modalEdit" tabindex="-1">
-  <div class="modal-dialog">
+<!-- ================= MODAL EDITAR ================= -->
+<div class="modal fade" id="modalEditar" tabindex="-1">
+  <div class="modal-dialog modal-lg">
     <form method="post" class="modal-content rounded-4">
       {% csrf_token %}
       <input type="hidden" name="action" value="editar">
-      <input type="hidden" name="id" id="edit_id">
+      <input type="hidden" name="id" id="e_id">
       <div class="modal-header">
         <h5 class="modal-title fw-bold">Modificar Usuario</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        <button type="button" class="btn btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
-        <div class="mb-3">
-          <label class="form-label small fw-bold">Nombre</label>
-          <input type="text" name="nombre" id="edit_nombre" class="form-control" required>
+        <div class="row g-3">
+          <div class="col-md-6"><label class="form-label small fw-bold">Nombre</label>
+            <input type="text" name="nombre" id="e_nombre" class="form-control"></div>
+          <div class="col-md-6"><label class="form-label small fw-bold">Apellido</label>
+            <input type="text" name="apellido" id="e_apellido" class="form-control"></div>
+          <div class="col-md-6"><label class="form-label small fw-bold">Cédula</label>
+            <input type="text" name="cedula" id="e_cedula" class="form-control"></div>
+          <div class="col-md-6"><label class="form-label small fw-bold">Teléfono</label>
+            <input type="text" name="telefono" id="e_telefono" class="form-control"></div>
+          <div class="col-md-4"><label class="form-label small fw-bold">Sexo</label>
+            <select name="sexo" id="e_sexo" class="form-select">
+              <option value="M">Masculino</option><option value="F">Femenino</option><option value="O">Otro</option>
+            </select></div>
+          <div class="col-md-4"><label class="form-label small fw-bold">Rol</label>
+            <select name="rol_id" id="e_rol" class="form-select">
+              <option value="">Sin rol</option>
+              {% for r in roles %}<option value="{{ r.id }}">{{ r.nombre }}</option>{% endfor %}
+            </select></div>
+          <div class="col-md-4"><label class="form-label small fw-bold">Usuario</label>
+            <input type="text" name="usuario" id="e_usuario" class="form-control"></div>
+          <div class="col-md-6"><label class="form-label small fw-bold">Nueva contraseña</label>
+            <input type="password" name="clave" class="form-control" placeholder="Dejar vacío para no cambiarla"></div>
         </div>
-        <div class="mb-3">
-          <label class="form-label small fw-bold">Apellido</label>
-          <input type="text" name="apellido" id="edit_apellido" class="form-control" required>
-        </div>
-        <div class="mb-3">
-          <label class="form-label small fw-bold">Cédula</label>
-          <input type="text" name="cedula" id="edit_cedula" class="form-control" required>
-        </div>
-        <div class="mb-3">
-          <label class="form-label small fw-bold">Teléfono</label>
-          <input type="text" name="telefono" id="edit_telefono" class="form-control">
-        </div>
-        <div class="mb-3">
-          <label class="form-label small fw-bold">Edad</label>
-          <input type="number" name="edad" id="edit_edad" class="form-control" required>
-        </div>
-        <div class="mb-3">
-          <label class="form-label small fw-bold">Rol</label>
-          <select name="rol_id" id="edit_rol" class="form-select">
-            <option value="">Seleccione...</option>
-            {% for r in roles %}
-            <option value="{{ r.id }}">{{ r.nombre }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="mb-3">
-          <label class="form-label small fw-bold">Usuario</label>
-          <input type="text" name="usuario" id="edit_usuario" class="form-control" required>
-        </div>
-        <div class="mb-3">
-          <label class="form-label small fw-bold">Nueva Clave</label>
-          <input type="password" name="clave" class="form-control" placeholder="Dejar vacío para no cambiar">
+
+        <h6 class="fw-bold mt-3 mb-2">Permisos</h6>
+        <div class="row g-2">
+          {% for m in modulos %}
+          <div class="col-md-4">
+            <div class="border rounded-3 p-2 h-100">
+              <div class="fw-bold small mb-1">{{ m.nombre }}</div>
+              {% for p in m.permisos %}
+              <div class="form-check">
+                <input class="form-check-input e-perm" type="checkbox" name="permisos" value="{{ p.codigo }}"
+                       id="e_perm_{{ p.codigo }}"
+                       {% if p.es_eliminar and not puede_eliminar %}disabled{% endif %}>
+                <label class="form-check-label small" for="e_perm_{{ p.codigo }}">{{ p.nombre }}</label>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
         </div>
       </div>
       <div class="modal-footer">
@@ -210,35 +408,221 @@
   </div>
 </div>
 
+<!-- ================= MODAL NUEVO ROL ================= -->
+<div class="modal fade" id="modalNuevoRol" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <form method="post" class="modal-content rounded-4">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="crear_rol">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">Nuevo Rol</h5>
+        <button type="button" class="btn btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Nombre del rol *</label>
+            <input type="text" name="nombre_rol" class="form-control" required placeholder="Ej: Fisioterapeuta">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small fw-bold">Descripción</label>
+            <input type="text" name="descripcion_rol" class="form-control" placeholder="Para qué es este rol">
+          </div>
+        </div>
+        <h6 class="fw-bold mb-2">Permisos del rol</h6>
+        <div class="row g-2">
+          {% for m in modulos %}
+          <div class="col-md-4">
+            <div class="border rounded-3 p-2 h-100">
+              <div class="fw-bold small mb-1">{{ m.nombre }}</div>
+              {% for p in m.permisos %}
+              <div class="form-check">
+                <input class="form-check-input nrol-perm" type="checkbox" name="permisos" value="{{ p.codigo }}"
+                       id="nrol_{{ p.codigo }}"
+                       {% if p.es_eliminar %}disabled title="Solo el administrador puede eliminar"{% endif %}>
+                <label class="form-check-label small {% if p.es_eliminar %}text-muted{% endif %}" for="nrol_{{ p.codigo }}">
+                  {{ p.nombre }}{% if p.es_eliminar %} (solo admin){% endif %}
+                </label>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-corporate">Crear Rol</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= MODAL EDITAR ROL ================= -->
+<div class="modal fade" id="modalEditarRol" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="post" class="modal-content rounded-4">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="editar_rol">
+      <input type="hidden" name="rol_id" id="erol_id">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">Modificar Rol</h5>
+        <button type="button" class="btn btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label small fw-bold">Nombre</label>
+        <input type="text" name="nombre_rol" id="erol_nombre" class="form-control mb-3" required>
+        <label class="form-label small fw-bold">Descripción</label>
+        <input type="text" name="descripcion_rol" id="erol_desc" class="form-control">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-corporate">Guardar Cambios</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= MODAL PERMISOS DE ROL ================= -->
+<div class="modal fade" id="modalPermisosRol" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <form method="post" class="modal-content rounded-4">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="guardar_permisos_rol">
+      <input type="hidden" name="rol_id" id="prol_id">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">Permisos del rol: <span id="prol_nombre"></span></h5>
+        <button type="button" class="btn btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-2">
+          {% for m in modulos %}
+          <div class="col-md-4">
+            <div class="border rounded-3 p-2 h-100">
+              <div class="fw-bold small mb-1">{{ m.nombre }}</div>
+              {% for p in m.permisos %}
+              <div class="form-check">
+                <input class="form-check-input prol-perm" type="checkbox" name="permisos" value="{{ p.codigo }}"
+                       id="prol_{{ p.codigo }}">
+                <label class="form-check-label small" for="prol_{{ p.codigo }}">{{ p.nombre }}</label>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-corporate">Guardar Permisos</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
 <script>
-document.getElementById('modalView').addEventListener('show.bs.modal', function(e){
-  const b = e.relatedTarget;
-  document.getElementById('view_nombre').textContent = b.getAttribute('data-nombre');
-  document.getElementById('view_apellido').textContent = b.getAttribute('data-apellido');
-  document.getElementById('view_cedula').textContent = b.getAttribute('data-cedula');
-  document.getElementById('view_telefono').textContent = b.getAttribute('data-telefono');
-  document.getElementById('view_edad').textContent = b.getAttribute('data-edad');
-  document.getElementById('view_rol').textContent = b.getAttribute('data-rol');
-  document.getElementById('view_usuario').textContent = b.getAttribute('data-usuario');
-  document.getElementById('view_clave').textContent = b.getAttribute('data-clave');
+// Permisos predefinidos de cada rol (se cargan desde el servidor)
+const PERMISOS_ROL = {
+    {% for nombre, desc, perms in roles_con_permisos %}'{{ nombre|escapejs }}': [{% for c in perms %}'{{ c|escapejs }}',{% endfor %}],{% endfor %}
+};
+
+// Roles -> id (para mapear la selección del select)
+const ROL_IDS = {
+    {% for r in roles %}'{{ r.id }}': '{{ r.nombre|escapejs }}',{% endfor %}
+};
+
+const PUEDE_ELIMINAR = {{ puede_eliminar|yesno:"true,false" }};
+
+// Marca los permisos indicados
+function marcarPermisos(prefijo, codigos) {
+    document.querySelectorAll('.' + prefijo).forEach(function (chk) {
+        chk.checked = codigos.includes(chk.value);
+    });
+    // Los permisos de eliminar deshabilitados no se pueden marcar
+    document.querySelectorAll('.' + prefijo).forEach(function (chk) {
+        if (chk.disabled) chk.checked = false;
+    });
+}
+
+function permisosDeRol(nombreRol) {
+    return PERMISOS_ROL[nombreRol] || [];
+}
+
+// --- Formulario nuevo: al elegir rol se pre-cargan sus permisos ---
+document.getElementById('sel_rol').addEventListener('change', function () {
+    marcarPermisos('perm-check', permisosDeRol(ROL_IDS[this.value]));
 });
 
-document.getElementById('modalEdit').addEventListener('show.bs.modal', function(e){
-  const b = e.relatedTarget;
-  document.getElementById('edit_id').value = b.getAttribute('data-id');
-  document.getElementById('edit_nombre').value = b.getAttribute('data-nombre');
-  document.getElementById('edit_apellido').value = b.getAttribute('data-apellido');
-  document.getElementById('edit_cedula').value = b.getAttribute('data-cedula');
-  document.getElementById('edit_telefono').value = b.getAttribute('data-telefono');
-  // edad from fecha nacimiento
-  const fecha = b.getAttribute('data-edad');
-  if(fecha){
-    const born = new Date(fecha);
-    const age = new Date().getFullYear() - born.getFullYear();
-    document.getElementById('edit_edad').value = age;
-  }
-  document.getElementById('edit_rol').value = b.getAttribute('data-rol');
-  document.getElementById('edit_usuario').value = b.getAttribute('data-usuario');
+// --- Modal ver ---
+document.getElementById('modalVer').addEventListener('show.bs.modal', function (e) {
+    const b = e.relatedTarget;
+    document.getElementById('v_nombre').textContent = b.getAttribute('data-nombre');
+    document.getElementById('v_apellido').textContent = b.getAttribute('data-apellido');
+    document.getElementById('v_cedula').textContent = b.getAttribute('data-cedula') || '-';
+    document.getElementById('v_telefono').textContent = b.getAttribute('data-telefono') || '-';
+    document.getElementById('v_sexo').textContent = b.getAttribute('data-sexo') || '-';
+    document.getElementById('v_rol').textContent = b.getAttribute('data-rol');
+    document.getElementById('v_usuario').textContent = b.getAttribute('data-usuario');
+    const perms = (b.getAttribute('data-permisos') || '').split(',').filter(Boolean);
+    document.getElementById('v_permisos').innerHTML = perms.length
+        ? perms.map(p => '<span class="badge bg-light text-dark">' + p + '</span>').join('')
+        : '<span class="text-muted">Sin permisos</span>';
+});
+
+// --- Modal editar ---
+document.getElementById('modalEditar').addEventListener('show.bs.modal', function (e) {
+    const b = e.relatedTarget;
+    document.getElementById('e_id').value = b.getAttribute('data-id');
+    document.getElementById('e_nombre').value = b.getAttribute('data-nombre');
+    document.getElementById('e_apellido').value = b.getAttribute('data-apellido');
+    document.getElementById('e_cedula').value = b.getAttribute('data-cedula');
+    document.getElementById('e_telefono').value = b.getAttribute('data-telefono');
+    document.getElementById('e_sexo').value = b.getAttribute('data-sexo') || 'O';
+    document.getElementById('e_rol').value = b.getAttribute('data-rol');
+    document.getElementById('e_usuario').value = b.getAttribute('data-usuario');
+    marcarPermisos('e-perm', (b.getAttribute('data-permisos') || '').split(',').filter(Boolean));
+});
+
+// --- Modal editar rol (solo roles personalizados) ---
+document.getElementById('modalEditarRol').addEventListener('show.bs.modal', function (e) {
+    const b = e.relatedTarget;
+    document.getElementById('erol_id').value = b.getAttribute('data-id');
+    document.getElementById('erol_nombre').value = b.getAttribute('data-nombre');
+    document.getElementById('erol_desc').value = b.getAttribute('data-desc') || '';
+});
+
+// --- Modal permisos de rol ---
+document.getElementById('modalPermisosRol').addEventListener('show.bs.modal', function (e) {
+    const b = e.relatedTarget;
+    document.getElementById('prol_id').value = b.getAttribute('data-id');
+    document.getElementById('prol_nombre').textContent = b.getAttribute('data-nombre');
+
+    const esAdmin = b.getAttribute('data-esadmin') === '1';
+    // Los permisos de eliminar solo se ofrecen al administrador
+    document.querySelectorAll('.prol-perm').forEach(function (chk) {
+        const esEliminar = chk.value.endsWith('.eliminar');
+        chk.disabled = esEliminar && !esAdmin && !PUEDE_ELIMINAR;
+        if (chk.disabled) chk.checked = false;
+    });
+    marcarPermisos('prol-perm', (b.getAttribute('data-permisos') || '').split(',').filter(Boolean));
+});
+
+// --- Confirmar eliminación de rol con AlertifyJS ---
+document.querySelectorAll('.btn-elim-rol').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        const nombre = this.getAttribute('data-nombre');
+        const form = this.closest('form');
+        if (typeof notify !== 'undefined') {
+            notify.confirmar(
+                `¿Eliminar el rol "${nombre}"? Los usuarios que lo tengan deberán cambiar de rol.`,
+                function () { form.submit(); }
+            );
+        } else if (window.confirm(`¿Eliminar el rol "${nombre}"?`)) {
+            form.submit();
+        }
+    });
 });
 </script>
 {% endblock %}

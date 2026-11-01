@@ -56,7 +56,7 @@ def api_buscar_citas(request):
     for c in citas:
         # obtener cédula del paciente
         ident = c.paciente.persona.identificaciones.first()
-        cedula = f"{ident.dsc} {ident.valor}" if ident else ''
+        cedula = f"{ident.descripcion} {ident.valor}" if ident else ''
         data.append({
             'id': c.id,
             'paciente': f"{c.paciente.persona.nombre} {c.paciente.persona.apellido}",
@@ -64,6 +64,6 @@ def api_buscar_citas(request):
             'medico': f"{c.medico.persona.nombre} {c.medico.persona.apellido}",
             'fecha_atencion': c.fecha_atencion.strftime('%Y-%m-%d'),
             'estado': ESTADO_MAP.get(c.estado_cita_id, 'Desconocido'),
-            'tipo': c.tipo_cita or '',
+            'tipo': c.get_tipo_cita_display() or 'Sin tipo',
         })
     return JsonResponse(data, safe=False)

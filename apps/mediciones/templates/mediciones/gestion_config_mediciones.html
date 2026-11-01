@@ -1,92 +1,92 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container-fluid">
-    <h2 class="fw-bold mb-4">⚙️ Configuración de Mediciones</h2>
-    <ul class="nav nav-tabs mb-4">
-        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#equipos">Equipos</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#parametros">Parámetros</button></li>
-        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#relaciones">Relaciones</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" id="equipos">
-            <div class="card card-custom p-4">
-                <form method="post" class="mb-4">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="crear_equipo">
-                    <div class="row g-3">
-                        <div class="col-md-3"><input name="nombre" class="form-control" placeholder="Nombre equipo" required></div>
-                        <div class="col-md-3"><input name="tipo_tecnologia" class="form-control" placeholder="Tipo tecnología"></div>
-                        <div class="col-md-3"><input name="marca" class="form-control" placeholder="Marca"></div>
-                        <div class="col-md-3"><input name="modelo" class="form-control" placeholder="Modelo"></div>
-                    </div>
-                    <div class="mt-2 text-end"><button class="btn btn-corporate">Guardar Equipo</button></div>
-                </form>
-                <table class="table table-hover">
-                    <thead><tr><th>ID</th><th>Nombre</th><th>Tipo</th><th>Marca</th><th>Modelo</th></tr></thead>
-                    <tbody>
-                        {% for e in equipos %}
-                        <tr><td>{{ e.id }}</td><td>{{ e.nombre }}</td><td>{{ e.tipo_tecnologia }}</td><td>{{ e.marca }}</td><td>{{ e.modelo }}</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="tab-pane fade" id="parametros">
-            <div class="card card-custom p-4">
-                <form method="post" class="mb-4">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="crear_parametro">
-                    <div class="row g-3">
-                        <div class="col-md-6"><input name="dsc" class="form-control" placeholder="Descripción parámetro" required></div>
-                        <div class="col-md-3"><input name="unidad" class="form-control" placeholder="Unidad" required></div>
-                    </div>
-                    <div class="mt-2 text-end"><button class="btn btn-corporate">Guardar Parámetro</button></div>
-                </form>
-                <table class="table table-hover">
-                    <thead><tr><th>ID</th><th>Descripción</th><th>Unidad</th></tr></thead>
-                    <tbody>
-                        {% for p in parametros %}
-                        <tr><td>{{ p.id }}</td><td>{{ p.dsc }}</td><td>{{ p.unidad }}</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="tab-pane fade" id="relaciones">
-            <div class="card card-custom p-4">
-                <form method="post" class="mb-4">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="crear_relacion">
-                    <div class="row g-3">
-                        <div class="col-md-5">
-                            <select name="equipo_id" class="form-select" required>
-                                <option value="">Equipo</option>
-                                {% for e in equipos %}
-                                <option value="{{ e.id }}">{{ e.nombre }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-5">
-                            <select name="parametro_id" class="form-select" required>
-                                <option value="">Parámetro</option>
-                                {% for p in parametros %}
-                                <option value="{{ p.id }}">{{ p.dsc }} ({{ p.unidad }})</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="mt-2 text-end"><button class="btn btn-corporate">Crear Relación</button></div>
-                </form>
-                <table class="table table-hover">
-                    <thead><tr><th>ID</th><th>Equipo</th><th>Parámetro</th></tr></thead>
-                    <tbody>
-                        {% for r in relaciones %}
-                        <tr><td>{{ r.id }}</td><td>{{ r.equipo.nombre }}</td><td>{{ r.parametro.dsc }}</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+<h2 class="fw-bold mb-4"> Configuración de Mediciones</h2>
+<ul class="nav nav-tabs mb-4">
+<li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#equipos">Equipos</button></li>
+<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#parametros">Parámetros</button></li>
+<li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#relaciones">Relaciones</button></li>
+</ul>
+<div class="tab-content">
+<div class="tab-pane fade show active" id="equipos">
+<div class="card card-custom p-4">
+<form method="post" class="mb-4">
+{% csrf_token %}
+<input type="hidden" name="action" value="crear_equipo">
+<div class="row g-3">
+<div class="col-md-3"><input name="nombre" class="form-control" placeholder="Nombre equipo" required></div>
+<div class="col-md-3"><input name="tipo_tecnologia" class="form-control" placeholder="Tipo tecnología"></div>
+<div class="col-md-3"><input name="marca" class="form-control" placeholder="Marca"></div>
+<div class="col-md-3"><input name="modelo" class="form-control" placeholder="Modelo"></div>
+</div>
+<div class="mt-2 text-end"><button class="btn btn-corporate">Guardar Equipo</button></div>
+</form>
+<table class="table table-hover">
+<thead><tr><th>ID</th><th>Nombre</th><th>Tipo</th><th>Marca</th><th>Modelo</th></tr></thead>
+<tbody>
+{% for e in equipos %}
+<tr><td>{{ e.id }}</td><td>{{ e.nombre }}</td><td>{{ e.tipo_tecnologia }}</td><td>{{ e.marca }}</td><td>{{ e.modelo }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+<div class="tab-pane fade" id="parametros">
+<div class="card card-custom p-4">
+<form method="post" class="mb-4">
+{% csrf_token %}
+<input type="hidden" name="action" value="crear_parametro">
+<div class="row g-3">
+<div class="col-md-6"><input name="dsc" class="form-control" placeholder="Descripción parámetro" required></div>
+<div class="col-md-3"><input name="unidad" class="form-control" placeholder="Unidad" required></div>
+</div>
+<div class="mt-2 text-end"><button class="btn btn-corporate">Guardar Parámetro</button></div>
+</form>
+<table class="table table-hover">
+<thead><tr><th>ID</th><th>Descripción</th><th>Unidad</th></tr></thead>
+<tbody>
+{% for p in parametros %}
+<tr><td>{{ p.id }}</td><td>{{ p.dsc }}</td><td>{{ p.unidad }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+<div class="tab-pane fade" id="relaciones">
+<div class="card card-custom p-4">
+<form method="post" class="mb-4">
+{% csrf_token %}
+<input type="hidden" name="action" value="crear_relacion">
+<div class="row g-3">
+<div class="col-md-5">
+<select name="equipo_id" class="form-select" required>
+<option value="">Equipo</option>
+{% for e in equipos %}
+<option value="{{ e.id }}">{{ e.nombre }}</option>
+{% endfor %}
+</select>
+</div>
+<div class="col-md-5">
+<select name="parametro_id" class="form-select" required>
+<option value="">Parámetro</option>
+{% for p in parametros %}
+<option value="{{ p.id }}">{{ p.dsc }} ({{ p.unidad }})</option>
+{% endfor %}
+</select>
+</div>
+</div>
+<div class="mt-2 text-end"><button class="btn btn-corporate">Crear Relación</button></div>
+</form>
+<table class="table table-hover">
+<thead><tr><th>ID</th><th>Equipo</th><th>Parámetro</th></tr></thead>
+<tbody>
+{% for r in relaciones %}
+<tr><td>{{ r.id }}</td><td>{{ r.equipo.nombre }}</td><td>{{ r.parametro.dsc }}</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+</div>
 </div>
 {% endblock %}

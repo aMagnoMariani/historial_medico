@@ -2,38 +2,60 @@
 {% block content %}
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold">📊 Estadísticas del Consultorio</h2>
+        <h2 class="fw-bold">Estadísticas y Reportes</h2>
     </div>
 
-    <!-- EXPORTAR -->
+    <!-- FILTROS Y EXPORTACIÓN -->
     <div class="card card-custom p-3 mb-4">
-        <form method="get" class="row g-2 align-items-end" id="exportForm">
-            <div class="col-md-3">
+        <form method="get" class="row g-2 align-items-end" id="filtroForm">
+            <div class="col-md-2">
                 <label class="form-label small fw-bold">Desde</label>
-                <input type="date" name="desde" id="exp_desde" class="form-control">
+                <input type="date" name="desde" value="{{ desde }}" class="form-control">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-bold">Hasta</label>
+                <input type="date" name="hasta" value="{{ hasta }}" class="form-control">
             </div>
             <div class="col-md-3">
-                <label class="form-label small fw-bold">Hasta</label>
-                <input type="date" name="hasta" id="exp_hasta" class="form-control">
+                <label class="form-label small fw-bold">Buscar paciente (nombre o cédula)</label>
+                <input type="text" name="q" value="{{ buscar }}" class="form-control" placeholder="Ej: María, V-12345678">
             </div>
-            <div class="col-md-6 d-flex gap-2 justify-content-end">
-                <button type="button" class="btn btn-corporate" id="btn_xlsx">
-                    <i class="bi bi-file-earmark-excel"></i> Exportar Excel
+            <div class="col-md-5 d-flex gap-2 justify-content-end">
+                <button type="submit" class="btn btn-outline-primary">
+                    <i class="bi bi-funnel"></i> Aplicar filtro
                 </button>
-                <button type="button" class="btn btn-outline-danger" id="btn_pdf">
-                    <i class="bi bi-file-earmark-pdf"></i> Exportar PDF
-                </button>
+                <a class="btn btn-corporate" id="btn_xlsx" href="#">
+                    <i class="bi bi-file-earmark-excel"></i> Excel
+                </a>
+                <a class="btn btn-outline-danger" id="btn_pdf" href="#">
+                    <i class="bi bi-file-pdf"></i> PDF
+                </a>
+                <a class="btn btn-outline-secondary" id="btn_hist_xlsx" href="#">
+                    <i class="bi bi-file-earmark-excel"></i> Histórico
+                </a>
+                <a class="btn btn-outline-secondary" id="btn_hist_pdf" href="#">
+                    <i class="bi bi-file-pdf"></i> Histórico
+                </a>
             </div>
         </form>
-        <small class="text-muted">Si no indicas fechas se exporta todo el historial. El reporte incluye pacientes con sus características y las visitas (día, mes, médico, diagnóstico).</small>
+        <small class="text-muted">
+            Las cifras por edad y especialidad usan la <strong>fecha de atención</strong> para calcular la edad.
+            Sin fechas se muestra todo el historial.
+        </small>
     </div>
 
-    <!-- RESUMEN GENERAL -->
+    <!-- RESUMEN -->
     <div class="row g-3 mb-4">
         <div class="col-6 col-md">
             <div class="card card-custom p-3 text-center">
                 <div class="text-muted small">Citas</div>
                 <div class="fs-3 fw-bold">{{ resumen.total_citas }}</div>
+            </div>
+        </div>
+        <div class="col-6 col-md">
+            <div class="card card-custom p-3 text-center">
+                <div class="text-muted small">Atendidas</div>
+                <div class="fs-3 fw-bold">{{ resumen.atendidas }}</div>
             </div>
         </div>
         <div class="col-6 col-md">
@@ -44,144 +66,164 @@
         </div>
         <div class="col-6 col-md">
             <div class="card card-custom p-3 text-center">
-                <div class="text-muted small">Especialidades activas</div>
-                <div class="fs-3 fw-bold">{{ resumen.total_especialidades_activas }}</div>
-            </div>
-        </div>
-        <div class="col-6 col-md">
-            <div class="card card-custom p-3 text-center">
                 <div class="text-muted small">Diagnósticos</div>
                 <div class="fs-3 fw-bold">{{ resumen.total_diagnosticos }}</div>
             </div>
         </div>
         <div class="col-6 col-md">
             <div class="card card-custom p-3 text-center">
-                <div class="text-muted small">Mediciones</div>
-                <div class="fs-3 fw-bold">{{ resumen.total_mediciones }}</div>
+                <div class="text-muted small">Especialidades activas</div>
+                <div class="fs-3 fw-bold">{{ resumen.total_especialidades_activas }}</div>
             </div>
         </div>
     </div>
 
-    <!-- DEMOGRAFÍA DE PACIENTES -->
-    <h5 class="fw-bold mb-3">👥 Demografía de Pacientes</h5>
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="card card-custom p-3 h-100">
-                <h6 class="fw-bold">Por Sexo</h6>
-                <table class="table table-sm mb-0">
-                    <tbody>
-                        {% for r in pacientes_sexo %}
-                        <tr><td>{{ r.sexo }}</td><td class="text-end fw-bold">{{ r.total }}</td></tr>
-                        {% empty %}
-                        <tr><td class="text-muted">Sin datos</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card card-custom p-3 h-100">
-                <h6 class="fw-bold">Por Edad</h6>
-                <table class="table table-sm mb-0">
-                    <tbody>
-                        {% for r in pacientes_edad %}
-                        <tr><td>{{ r.rango }} años</td><td class="text-end fw-bold">{{ r.total }}</td></tr>
-                        {% empty %}
-                        <tr><td class="text-muted">Sin datos</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card card-custom p-3 h-100">
-                <h6 class="fw-bold">Por Etnia</h6>
-                <table class="table table-sm mb-0">
-                    <tbody>
-                        {% for r in pacientes_etnia %}
-                        <tr><td>{{ r.persona__etnia__tipo_etnia|default:'No especificada' }}</td>
-                            <td class="text-end fw-bold">{{ r.total }}</td></tr>
-                        {% empty %}
-                        <tr><td class="text-muted">Sin datos</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card card-custom p-3 h-100">
-                <h6 class="fw-bold">Por Ubicación (Estado)</h6>
-                <table class="table table-sm mb-0">
-                    <tbody>
-                        {% for r in pacientes_ubicacion %}
-                        <tr><td>{{ r.ubicacion|default:'No especificado' }}</td><td class="text-end fw-bold">{{ r.total }}</td></tr>
-                        {% empty %}
-                        <tr><td class="text-muted">Sin datos</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+    <!-- ============================================================= -->
+    <!-- 1. EDAD x SEXO (visitas atendidas)                             -->
+    <!-- ============================================================= -->
+    <h4 class="fw-bold mb-3">Visitas por edad y sexo</h4>
+    <div class="card card-custom p-4 mb-4">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Rango de edad</th>
+                        <th class="text-end">Masculino</th>
+                        <th class="text-end">Femenino</th>
+                        <th class="text-end">Otro</th>
+                        <th class="text-end">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in edad_por_sexo %}
+                    <tr {% if r.total == 0 %}class="text-muted"{% endif %}>
+                        <td>{{ r.rango }}</td>
+                        <td class="text-end">{{ r.M }}</td>
+                        <td class="text-end">{{ r.F }}</td>
+                        <td class="text-end">{{ r.O }}</td>
+                        <td class="text-end fw-bold">{{ r.total }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot class="table-light">
+                    <tr class="fw-bold">
+                        <td>Total</td>
+                        <td class="text-end">{{ edad_por_sexo_totales.M }}</td>
+                        <td class="text-end">{{ edad_por_sexo_totales.F }}</td>
+                        <td class="text-end">{{ edad_por_sexo_totales.O }}</td>
+                        <td class="text-end">{{ edad_por_sexo_totales.total }}</td>
+                    </tr>
+                </tfoot>
+            </table>
         </div>
     </div>
 
-    <!-- ACTIVIDAD DEL CONSULTORIO -->
-    <h5 class="fw-bold mb-3">🗓️ Actividad del Consultorio</h5>
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card card-custom p-3 h-100">
-                <h6 class="fw-bold">Citas por Mes</h6>
-                <table class="table table-sm mb-0">
-                    <tbody>
-                        {% for r in citas_mes %}
-                        <tr><td>{{ r.mes|date:"M Y" }}</td><td class="text-end fw-bold">{{ r.total }}</td></tr>
-                        {% empty %}
-                        <tr><td class="text-muted">Sin datos</td></tr>
+    <!-- ============================================================= -->
+    <!-- 2. ESPECIALIDAD x EDAD x SEXO (formato del ejemplo)            -->
+    <!-- ============================================================= -->
+    <h4 class="fw-bold mb-3">Visitas por especialidad, edad y sexo</h4>
+    <div class="card card-custom p-4 mb-4">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm align-middle mb-0" style="min-width: 1100px;">
+                <thead class="table-light">
+                    <!-- Doble cabecera: rango (colspan 2) y debajo m / f -->
+                    <tr>
+                        <th rowspan="2" class="align-middle">Especialidad</th>
+                        {% for r in esp_edad_sexo.rangos %}
+                        <th colspan="2" class="text-center">{{ r }}</th>
                         {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                        <th colspan="3" class="text-center">Totales</th>
+                    </tr>
+                    <tr>
+                        {% for r in esp_edad_sexo.rangos %}
+                        <th class="text-center small">m</th>
+                        <th class="text-center small">f</th>
+                        {% endfor %}
+                        <th class="text-center small">m</th>
+                        <th class="text-center small">f</th>
+                        <th class="text-center small">tot</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fila in esp_edad_sexo.filas %}
+                    <tr>
+                        <td class="fw-bold">{{ fila.especialidad }}</td>
+                        {% for c in fila.celdas %}
+                        <td class="text-center">{{ c.M }}</td>
+                        <td class="text-center">{{ c.F }}</td>
+                        {% endfor %}
+                        <td class="text-center">{{ fila.total_M }}</td>
+                        <td class="text-center">{{ fila.total_F }}</td>
+                        <td class="text-center fw-bold">{{ fila.total }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="23" class="text-center text-muted">Sin visitas en el rango indicado</td></tr>
+                    {% endfor %}
+                </tbody>
+                {% if esp_edad_sexo.filas %}
+                <tfoot class="table-light fw-bold">
+                    <tr>
+                        <td>Totales</td>
+                        {% for t in esp_edad_sexo.totales %}
+                        <td class="text-center">{{ t.M }}</td>
+                        <td class="text-center">{{ t.F }}</td>
+                        {% endfor %}
+                        <td class="text-center">{{ esp_edad_sexo.totales_generales.M }}</td>
+                        <td class="text-center">{{ esp_edad_sexo.totales_generales.F }}</td>
+                        <td class="text-center">{{ esp_edad_sexo.totales_generales.total }}</td>
+                    </tr>
+                </tfoot>
+                {% endif %}
+            </table>
         </div>
-        <div class="col-md-4">
-            <div class="card card-custom p-3 h-100">
-                <h6 class="fw-bold">Citas por Estado</h6>
-                <table class="table table-sm mb-0">
-                    <tbody>
-                        {% for r in citas_estado %}
-                        <tr><td>{{ r.estado }}</td><td class="text-end fw-bold">{{ r.total }}</td></tr>
-                        {% empty %}
-                        <tr><td class="text-muted">Sin datos</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <p class="text-muted small mb-0 mt-2">
+            Una visita por fila. Si el mismo paciente vino tres veces, cuenta tres.
+            El sexo <strong>Otro</strong> se incluye en el total general.
+        </p>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- 3. POR UBICACIÓN (Monagas -> municipio -> parroquia)           -->
+    <!-- ============================================================= -->
+    <h4 class="fw-bold mb-3">Pacientes por ubicación</h4>
+    <div class="card card-custom p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <strong>{{ ubicacion.estado }}</strong>
+                <span class="text-muted small ms-2">Seleccione un municipio para ver sus parroquias</span>
             </div>
+            <a href="{% url 'estadistica:por_ubicacion' %}" class="btn btn-corporate btn-sm">
+                Ver detalle por municipio
+            </a>
         </div>
-        <div class="col-md-4">
-            <div class="card card-custom p-3 h-100">
-                <h6 class="fw-bold">Especialidades más Atendidas</h6>
-                <table class="table table-sm mb-0">
-                    <tbody>
-                        {% for r in especialidades_atendidas %}
-                        <tr><td>{{ r.medico__especialidad__descripcion }}</td>
-                            <td class="text-end fw-bold">{{ r.atendidas }}</td></tr>
-                        {% empty %}
-                        <tr><td class="text-muted">Sin datos</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <div class="row g-2">
+            {% for item in ubicacion.items %}
+            <div class="col-md-3">
+                <a href="{% url 'estadistica:por_ubicacion_nivel' item.id %}" class="text-decoration-none">
+                    <div class="border rounded-3 p-2 text-center h-100">
+                        <div class="fw-bold text-dark small">{{ item.nombre }}</div>
+                        <div class="fs-4 fw-bold">{{ item.total }}</div>
+                        <div class="text-muted small">pacientes</div>
+                    </div>
+                </a>
             </div>
+            {% empty %}
+            <div class="col-12 text-muted">Sin municipios registrados.</div>
+            {% endfor %}
         </div>
     </div>
 
-    <!-- PANORAMA CLÍNICO -->
-    <h5 class="fw-bold mb-3">🩺 Panorama Clínico</h5>
+    <!-- ============================================================= -->
+    <!-- 4. DIAGNÓSTICOS                                               -->
+    <!-- ============================================================= -->
     <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card card-custom p-3 h-100">
-                <h6 class="fw-bold">Enfermedades más Frecuentes</h6>
+        <div class="col-md-6">
+            <div class="card card-custom p-4 h-100">
+                <h6 class="fw-bold mb-3">Enfermedades más frecuentes</h6>
                 <table class="table table-sm mb-0">
                     <tbody>
                         {% for r in enfermedades_top %}
-                        <tr><td>{{ r.valor }}</td><td class="text-end fw-bold">{{ r.total }}</td></tr>
+                        <tr><td>{{ r.desc }}</td><td class="text-end fw-bold">{{ r.total }}</td></tr>
                         {% empty %}
                         <tr><td class="text-muted">Sin datos</td></tr>
                         {% endfor %}
@@ -189,14 +231,13 @@
                 </table>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card card-custom p-3 h-100">
-                <h6 class="fw-bold">Diagnósticos por Categoría</h6>
+        <div class="col-md-6">
+            <div class="card card-custom p-4 h-100">
+                <h6 class="fw-bold mb-3">Síntomas más frecuentes</h6>
                 <table class="table table-sm mb-0">
                     <tbody>
-                        {% for r in enfermedades_categoria %}
-                        <tr><td>{{ r.dsc|default:'Sin categoría' }}</td>
-                            <td class="text-end fw-bold">{{ r.total }}</td></tr>
+                        {% for r in sintomas_top %}
+                        <tr><td>{{ r.desc }}</td><td class="text-end fw-bold">{{ r.total }}</td></tr>
                         {% empty %}
                         <tr><td class="text-muted">Sin datos</td></tr>
                         {% endfor %}
@@ -204,14 +245,27 @@
                 </table>
             </div>
         </div>
-        <div class="col-md-4">
-            <div class="card card-custom p-3 h-100">
-                <h6 class="fw-bold">Antecedentes más Reportados</h6>
+        <div class="col-md-6">
+            <div class="card card-custom p-4 h-100">
+                <h6 class="fw-bold mb-3">Pacientes por síntoma</h6>
+                <table class="table table-sm mb-0">
+                    <tbody>
+                        {% for r in pacientes_por_sintoma %}
+                        <tr><td>{{ r.desc }}</td><td class="text-end fw-bold">{{ r.pacientes }}</td></tr>
+                        {% empty %}
+                        <tr><td class="text-muted">Sin datos</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card card-custom p-4 h-100">
+                <h6 class="fw-bold mb-3">Antecedentes más reportados</h6>
                 <table class="table table-sm mb-0">
                     <tbody>
                         {% for r in antecedentes_top %}
-                        <tr><td>{{ r.antecedente_salud_id__dsc }}</td>
-                            <td class="text-end fw-bold">{{ r.total }}</td></tr>
+                        <tr><td>{{ r.descrip }}</td><td class="text-end fw-bold">{{ r.total }}</td></tr>
                         {% empty %}
                         <tr><td class="text-muted">Sin datos</td></tr>
                         {% endfor %}
@@ -221,70 +275,72 @@
         </div>
     </div>
 
-    <!-- SÍNTOMAS Y MEDICIONES -->
-    <h5 class="fw-bold mb-3">🌡️ Síntomas y Mediciones</h5>
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="card card-custom p-3 h-100">
-                <h6 class="fw-bold">Síntomas más Frecuentes</h6>
-                <table class="table table-sm mb-0">
-                    <tbody>
-                        {% for r in sintomas_top %}
-                        <tr><td>{{ r.sintoma }}</td><td class="text-end fw-bold">{{ r.total }}</td></tr>
-                        {% empty %}
-                        <tr><td class="text-muted">Sin datos</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card card-custom p-3 h-100">
-                <h6 class="fw-bold">Pacientes por Síntoma <span class="text-muted fw-normal">(ej: cuántos con "Tos")</span></h6>
-                <table class="table table-sm mb-0">
-                    <tbody>
-                        {% for r in pacientes_por_sintoma %}
-                        <tr><td>{{ r.sintoma }}</td><td class="text-end fw-bold">{{ r.pacientes }}</td></tr>
-                        {% empty %}
-                        <tr><td class="text-muted">Sin datos</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card card-custom p-3 h-100">
-                <h6 class="fw-bold">Promedio de Mediciones</h6>
-                <table class="table table-sm mb-0">
-                    <tbody>
-                        {% for r in promedio_parametros %}
-                        <tr><td>{{ r.equipo_parametro__parametro__dsc }}</td>
-                            <td class="text-end fw-bold">{{ r.promedio|floatformat:2 }} {{ r.equipo_parametro__parametro__unidad }}</td></tr>
-                        {% empty %}
-                        <tr><td class="text-muted">Sin datos</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+    <!-- ============================================================= -->
+    <!-- 5. REPORTE HISTÓRICO                                           -->
+    <!-- ============================================================= -->
+    <h4 class="fw-bold mb-3">Registros históricos de atención</h4>
+    <div class="card card-custom p-4 mb-4">
+        <p class="text-muted small">
+            Una fila por visita atendida, con el diagnóstico y la conducta de esa visita.
+            La edad corresponde a la <strong>fecha de atención</strong>: si a un paciente se le
+            diagnosticó algo a los 55 años, aquí aparece con 55 aunque hoy tenga más.
+        </p>
+        <div class="table-responsive">
+            <table class="table table-hover table-sm align-middle" style="min-width: 1400px;">
+                <thead class="table-light">
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th class="text-end">Edad</th>
+                        <th>Sexo</th>
+                        <th>Cédula</th>
+                        <th>Dirección</th>
+                        <th>Teléfono</th>
+                        <th>Fecha Nac.</th>
+                        <th>Diagnóstico</th>
+                        <th>Conducta</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for h in historico %}
+                    <tr>
+                        <td>{{ h.fecha }}</td>
+                        <td>{{ h.nombre }}</td>
+                        <td>{{ h.apellido }}</td>
+                        <td class="text-end">{{ h.edad|default:'-' }}</td>
+                        <td>{{ h.sexo }}</td>
+                        <td>{{ h.cedula }}</td>
+                        <td class="small">{{ h.direccion }}</td>
+                        <td>{{ h.telefono|default:'-' }}</td>
+                        <td>{{ h.fecha_nacimiento|default:'-' }}</td>
+                        <td class="small">{{ h.diagnostico }}</td>
+                        <td class="small">{{ h.conducta }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="11" class="text-center text-muted">Sin registros en el rango indicado</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
+
 <script>
-(function(){
-    const params = () => {
-        const p = new URLSearchParams();
-        const d = document.getElementById('exp_desde').value;
-        const h = document.getElementById('exp_hasta').value;
-        if (d) p.set('desde', d);
-        if (h) p.set('hasta', h);
-        const q = p.toString();
-        return q ? '?' + q : '';
-    };
-    document.getElementById('btn_xlsx').addEventListener('click', () => {
-        window.location = "{% url 'estadistica:exportar_excel' %}" + params();
-    });
-    document.getElementById('btn_pdf').addEventListener('click', () => {
-        window.location = "{% url 'estadistica:exportar_pdf' %}" + params();
+// Arma los enlaces de exportación con los filtros activos
+(function () {
+    var params = new URLSearchParams(window.location.search);
+    var sufijo = params.toString() ? '?' + params.toString() : '';
+    ['btn_xlsx', 'btn_pdf', 'btn_hist_xlsx', 'btn_hist_pdf'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        var base = {
+            btn_xlsx: "{% url 'estadistica:exportar_excel' %}",
+            btn_pdf: "{% url 'estadistica:exportar_pdf' %}",
+            btn_hist_xlsx: "{% url 'estadistica:exportar_historico_excel' %}",
+            btn_hist_pdf: "{% url 'estadistica:exportar_historico_pdf' %}"
+        }[id];
+        el.href = base + sufijo;
     });
 })();
 </script>

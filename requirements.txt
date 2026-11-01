@@ -1,2 +1,185 @@
+# =====================================================================
+#  Sistema de Citas Médicas — Dependencias del proyecto
+#  Proyecto: clinica  |  Python 3.14  |  Django 6.1  |  PostgreSQL
+# =====================================================================
+#
+#  INSTALACIÓN COMPLETA PASO A PASO (desde cero)
+#  ---------------------------------------------------------------
+#
+#  1. Crear el entorno virtual
+#       python3 -m venv venv
+#       source venv/bin/activate          (Linux/Mac)
+#       venv\Scripts\activate             (Windows)
+#
+#  2. Instalar las dependencias de este archivo
+#       pip install -r requirements.txt
+#
+#  3. Instalar el driver de PostgreSQL (viene en este archivo: psycopg)
+#     En Linux/Debian también hacen falta las librerías de desarrollo:
+#       sudo apt update
+#       sudo apt install -y python3-dev libpq-dev build-essential
+#
+#  4. Crear la base de datos en PostgreSQL (esquema clinica)
+#       sudo -u postgres psql
+#       CREATE DATABASE clinica;
+#       CREATE USER clinica_user WITH PASSWORD 'TU_CLAVE';
+#       GRANT ALL PRIVILEGES ON DATABASE clinica TO clinica_user;
+#       \q
+#
+#  5. Crear el esquema "clinica" con el SQL del proyecto
+#       psql -U clinica_user -d clinica -h localhost -f sql/esquema_clinica.sql
+#
+#
+#  5b. Tipo de cita (primera vez, rutina, seguimiento, control, emergencia)
+#       Agrega la columna cita.tipo_cita y marca las citas antiguas como RUTINA
+#       psql -U clinica_user -d clinica -h localhost -f sql/parche_tipo_cita.sql
+#       Valores del sistema:
+#         PRIMERA (Primera Vez) · RUTINA (Rutina) · SEGUIMIENTO (Seguimiento)
+#         CONTROL (Control)    · EMERGENCIA (Emergencia)
+#
+#
+#  5c. Árbol con ANCLA (id 0 = NINGUNO) en las tablas circulares
+#       Direcciones, tipos de identificación, enfermedades, síntomas y
+#       antecedentes. Evita que una fila quede huérfana y añade `tipo`
+#       para saber el nivel de cada una.
+#       psql -U clinica_user -d clinica -h localhost -f sql/parche_arboles.sql
+#
+#       Niveles:
+#         direccion       1=Estado  2=Municipio  3=Parroquia  4=Calle/Sector
+#         identificacion  1=Documento  2=Subtipo
+#         enfermedad      1=Categoria  2=Enfermedad
+#         sintomas        1=Categoria  2=Sintoma
+#         antecedentes    1=Categoria  2=Antecedente
+#
+#       El padre SIEMPRE apunta a una fila: 0 (NINGUNO) si es raíz.
+#       El selector de padre solo ofrece el nivel inmediato inferior.
+#
+#
+#  6. Aplicar los parches de ajuste a la base de datos
+#       psql -U clinica_user -d clinica -h localhost -f sql/parche_enfermedad_valor.sql
+#       psql -U clinica_user -d clinica -h localhost -f sql/parche_telefono.sql
+#       psql -U clinica_user -d clinica -h localhost -f sql/parche_tipo_cita.sql
+#       psql -U clinica_user -d clinica -h localhost -f sql/parche_arboles.sql
+#
+#  7. Configurar las variables de conexión (config/settings.py)
+#       DATABASES -> NAME, USER, PASSWORD, HOST, PORT
+#
+#
+#  7b. AlertifyJS (notificaciones y diálogos del sistema)
+#       No es un paquete de pip: son CSS/JS que van en static/alertify
+#       mkdir -p static/alertify
+#       curl -L -o static/alertify/alertify.min.css   https://cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/css/alertify.min.css
+#       curl -L -o static/alertify/bootstrap.min.css  https://cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/css/themes/bootstrap.min.css
+#       curl -L -o static/alertify/alertify.min.js    https://cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/alertify.min.js
+#       (el helper static/js/notificar.js ya viene incluido)
+#
+#  8. Preparar el registro de migraciones
+#     (las tablas ya se crearon con el SQL, solo se registran)
+#       python manage.py migrate --fake-initial
+#     Si el estado migratorio quedara inconsistente, ver
+#     docs/INSTALACION.md sección "Reparar migraciones".
+#
+#  9. Crear el superusuario
+#       python manage.py createsuperuser
+#
+# 10. Verificar que todo esté correcto
+#       python manage.py check
+#       python manage.py makemigrations --check --dry-run
+#
+# 11. Levantar el servidor
+#       python manage.py runserver
+#       Abrir: http://127.0.0.1:8000/
+#
+# 12. Recopilar archivos estáticos (para producción)
+
+#  Bootstrap 5.3 y Bootstrap Icons (archivos LOCALES en static/)
+#  -------------------------------------------------------------
+#  El proyecto ya los incluye. Si falta la carpeta static/, descárgala
+#  (así el sistema funciona sin internet en el servidor del consultorio):
+#
+#       mkdir -p static/css static/js static/webfonts
+#
+#       # Bootstrap 5.3: CSS, JS y sus archivos .map
+#       curl -L -o static/css/bootstrap.min.css        https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css
+#       curl -L -o static/css/bootstrap.min.css.map    https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css.map
+#       curl -L -o static/js/bootstrap.bundle.min.js   https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js
+#       curl -L -o static/js/bootstrap.bundle.min.js.map https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js.map
+#
+#       # Bootstrap Icons: CSS y fuentes (woff y woff2 son las que usan
+#       # los navegadores modernos)
+#       curl -L -o static/css/bootstrap-icons.css      https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css
+#       curl -L -o static/webfonts/bootstrap-icons.woff2 https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/fonts/bootstrap-icons.woff2
+#       curl -L -o static/webfonts/bootstrap-icons.woff  https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/fonts/bootstrap-icons.woff
+#
+#       # Corregir la ruta de las fuentes dentro del CSS de iconos
+#       sed -i 's|url("./fonts/|url("../webfonts/|g' static/css/bootstrap-icons.css
+#
+#       En Windows (PowerShell):
+#       Invoke-WebRequest -Uri <url> -OutFile <archivo>
+#
+
+#       python manage.py collectstatic --noinput
+#
+#  IMPORTANTE: en producción cambia DEBUG = False y configura
+#  ALLOWED_HOSTS, SECRET_KEY y el servidor de base de datos real.
+#
+# =====================================================================
+
+# --- Núcleo del proyecto ---
+Django==6.1.1
+asgiref==3.12.1
+sqlparse==0.6.0
+
+# --- Base de datos PostgreSQL ---
+psycopg==3.3.6
+psycopg-binary==3.3.6
+
+# --- Reportes (Excel y PDF) ---
 openpyxl==3.1.5
+et_xmlfile==2.0.0
 reportlab==5.0.1
+
+# --- Imágenes (lo usa Django para ImageField / validación) ---
+pillow==12.3.0
+
+# --- Dependencia transitiva de requests/psycopg ---
+charset-normalizer==3.5.2
+
+# --- Servidor de aplicaciones (producción, opcional en desarrollo) ---
+gunicorn==23.0.0
+whitenoise==6.9.0
+
+
+# =====================================================================
+#  DEPENDENCIAS DEL FRONTEND (archivos locales, NO son paquetes pip)
+# =====================================================================
+#
+#  Bootstrap 5.3 + Bootstrap Icons + AlertifyJS
+#  Se descargan una sola vez y quedan en static/ (ver pasos 7 y 7b).
+#  NO hacen falta en tiempo de ejecución si la carpeta static/ ya está.
+#
+#  Versiones usadas:
+#     Bootstrap ............ 5.3.0
+#     Bootstrap Icons ...... 1.11.0
+#     AlertifyJS ........... 1.14.0
+#
+#  AlertifyJS — notificaciones y diálogos de confirmación:
+#
+#     mkdir -p static/alertify
+#     curl -L -o static/alertify/alertify.min.css   https://cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/css/alertify.min.css
+#     curl -L -o static/alertify/bootstrap.min.css  https://cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/css/themes/bootstrap.min.css
+#     curl -L -o static/alertify/alertify.min.js    https://cdn.jsdelivr.net/npm/alertifyjs@1.14.0/build/alertify.min.js
+#
+#     En Windows (PowerShell):
+#     Invoke-WebRequest -Uri <url> -OutFile <archivo>
+#
+#  Se usa desde el helper static/js/notificar.js:
+#     notify.ok('Guardado correctamente')
+#     notify.error('No se pudo guardar')
+#     notify.info('Recuerde revisar los datos')
+#     notify.confirmar('¿Eliminar el registro?', function () { ... })
+#
+#  Documentación: https://alertifyjs.com/
+#  Repositorio:   https://github.com/MohammadYounes/AlertifyJS
+#
+# =====================================================================

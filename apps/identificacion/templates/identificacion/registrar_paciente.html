@@ -1,330 +1,331 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold">📝 Registro de Nuevo Paciente</h2>
-        <a href="{% url 'identificacion:lista_pacientes' %}" class="btn btn-outline-secondary rounded-pill">
-            <i class="bi bi-arrow-left"></i> Volver a la lista
-        </a>
-    </div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+<h2 class="fw-bold"> Registro de Nuevo Paciente</h2>
+<a href="{% url 'identificacion:lista_pacientes' %}" class="btn btn-outline-secondary rounded-pill">
+<i class="bi bi-arrow-left"></i> Volver a la lista
+</a>
+</div>
 
-    <div class="card card-custom p-4">
-        <form method="post" id="formPaciente">
-            {% csrf_token %}
-            
-            <ul class="nav nav-tabs mb-4" id="patientTabs" role="tablist">
-                <li class="nav-item">
-                    <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button">
-                        <i class="bi bi-person-fill"></i> Datos Personales
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link" id="address-tab" data-bs-toggle="tab" data-bs-target="#address" type="button">
-                        <i class="bi bi-geo-alt-fill"></i> Ubicación
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link" id="health-tab" data-bs-toggle="tab" data-bs-target="#health" type="button">
-                        <i class="bi bi-heart-pulse-fill"></i> Datos Biológicos
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link" id="appointment-tab" data-bs-toggle="tab" data-bs-target="#appointment" type="button">
-                        <i class="bi bi-calendar-plus"></i> Agendar Cita
-                    </button>
-                </li>
-            </ul>
+<div class="card card-custom p-4">
+<form method="post" id="formPaciente">
+{% csrf_token %}
 
-            <div class="tab-content" id="patientTabsContent">
-                
-                <!-- TAB 1: DATOS PERSONALES -->
-                <div class="tab-pane fade show active" id="personal" role="tabpanel">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Nombre(s)</label>
-                            <input type="text" name="nombre" class="form-control" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Apellido(s)</label>
-                            <input type="text" name="apellido" class="form-control" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Sexo</label>
-                            <select name="sexo" class="form-select">
-                                <option value="M">Masculino</option>
-                                <option value="F">Femenino</option>
-                                <option value="O">Otro</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Documento Identidad</label>
-                            <div class="input-group">
-                                <select name="identificacion_tipo_id" class="form-select" style="max-width: 150px;">
-                                    {% for t in tipos_identificacion %}
-                                    <option value="{{ t.id }}">{{ t.dsc }}</option>
-                                    {% empty %}
-                                    <option value="1">Cédula</option>
-                                    {% endfor %}
-                                </select>
-                                <input type="text" name="identificacion_valor" class="form-control" required>
-                                <input type="hidden" name="identificacion_tipo_desc" value="Cédula">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Teléfono</label>
-                            <input type="text" name="telefono" class="form-control">
-                        </div>
-                    </div>
-                </div>
+<ul class="nav nav-tabs mb-4" id="patientTabs" role="tablist">
+<li class="nav-item">
+<button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button">
+<i class="bi bi-person-fill"></i> Datos Personales
+</button>
+</li>
+<li class="nav-item">
+<button class="nav-link" id="address-tab" data-bs-toggle="tab" data-bs-target="#address" type="button">
+<i class="bi bi-geo-alt-fill"></i> Ubicación
+</button>
+</li>
+<li class="nav-item">
+<button class="nav-link" id="health-tab" data-bs-toggle="tab" data-bs-target="#health" type="button">
+<i class="bi bi-heart-pulse-fill"></i> Datos Biológicos
+</button>
+</li>
+<li class="nav-item">
+<button class="nav-link" id="appointment-tab" data-bs-toggle="tab" data-bs-target="#appointment" type="button">
+<i class="bi bi-calendar-plus"></i> Agendar Cita
+</button>
+</li>
+</ul>
 
-                <!-- TAB 2: DIRECCIÓN -->
-                <div class="tab-pane fade" id="address" role="tabpanel">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Estado</label>
-                            <select id="id_estado" name="estado" class="form-select" required>
-                                <option value="">Seleccione Estado...</option>
-                                {% for e in estados %}
-                                    <option value="{{ e.id }}">{{ e.dsc }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Municipio</label>
-                            <select id="id_municipio" name="municipio" class="form-select" disabled required>
-                                <option value="">Seleccione Estado primero...</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Parroquia</label>
-                            <select id="id_parroquia" name="parroquia" class="form-select" disabled required>
-                                <option value="">Seleccione Municipio primero...</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Sector / Comunidad</label>
-                            <div class="input-group">
-                                <select id="id_sector" name="direccion_id" class="form-select" disabled required>
-                                    <option value="">Seleccione Parroquia primero...</option>
-                                </select>
-                                <button type="button" class="btn btn-outline-primary" id="btn-add-sector">
-                                    <i class="bi bi-plus-lg"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Detalle de Dirección</label>
-                            <input type="text" name="detalle_direccion" class="form-control">
-                        </div>
-                    </div>
-                </div>
+<div class="tab-content" id="patientTabsContent">
 
-                <!-- TAB 3: BIOLÓGICOS -->
-                <div class="tab-pane fade" id="health" role="tabpanel">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Fecha de Nacimiento</label>
-                            <input type="date" name="fecha_nacimiento" class="form-control" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Tipo de Sangre</label>
-                            <select name="sangre_id" class="form-select">
-                                <option value="">Seleccione...</option>
-                                {% for s in sangre %}
-                                    <option value="{{ s.id }}">{{ s.tipo_sangre }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Etnia</label>
-                            <select name="etnia_id" class="form-select">
-                                <option value="">Seleccione...</option>
-                                {% for et in etnias %}
-                                    <option value="{{ et.id }}">{{ et.tipo_etnia }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Discapacidad</label>
-                            <select name="discapacidad_id" class="form-select">
-                                <option value="">Ninguna</option>
-                                {% for d in discapacidades %}
-                                    <option value="{{ d.id }}">{{ d.tipo_discapacidad }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                </div>
+<!-- TAB 1: DATOS PERSONALES -->
+<div class="tab-pane fade show active" id="personal" role="tabpanel">
+<div class="row g-3">
+<div class="col-md-4">
+<label class="form-label small fw-bold">Nombre(s)</label>
+<input type="text" name="nombre" class="form-control" required>
+</div>
+<div class="col-md-4">
+<label class="form-label small fw-bold">Apellido(s)</label>
+<input type="text" name="apellido" class="form-control" required>
+</div>
+<div class="col-md-4">
+<label class="form-label small fw-bold">Sexo</label>
+<select name="sexo" class="form-select">
+<option value="M">Masculino</option>
+<option value="F">Femenino</option>
+<option value="O">Otro</option>
+</select>
+</div>
+<div class="col-md-4">
+<label class="form-label small fw-bold">Documento Identidad</label>
+<div class="input-group">
+<select name="identificacion_tipo_id" class="form-select" style="max-width: 150px;">
+{% for t in tipos_identificacion %}
+<option value="{{ t.id }}">{{ t.descripcion }}</option>
+{% empty %}
+<option value="1">Cédula</option>
+{% endfor %}
+</select>
+<input type="text" name="identificacion_valor" class="form-control" required>
+<input type="hidden" name="identificacion_tipo_desc" value="Cédula">
+</div>
+</div>
+<div class="col-md-4">
+<label class="form-label small fw-bold">Teléfono</label>
+<input type="text" name="telefono" class="form-control" placeholder="Ej: 0412-1234567">
+</div>
+</div>
+</div>
 
-                <!-- TAB 4: CITA MÉDICA -->
-                <div class="tab-pane fade" id="appointment" role="tabpanel">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Especialidad</label>
-                            <select id="id_especialidad" class="form-select">
-                                <option value="">Seleccione Especialidad...</option>
-                                {% for esp in especialidades %}
-                                    <option value="{{ esp.id }}">{{ esp.descripcion }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Médico</label>
-                            <select name="medico_id" id="id_medico" class="form-select">
-                                <option value="">Seleccione Especialidad primero...</option>
-                                {% for m in medicos %}
-                                    <option value="{{ m.id }}" data-esp="{{ m.especialidad.id }}">{{ m.persona.nombre }} {{ m.persona.apellido }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Fecha de Atención</label>
-                            <input type="date" name="cita_fecha" class="form-control">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Tipo de Cita</label>
-                            <select name="cita_tipo" class="form-select">
-                                <option value="">Seleccione...</option>
-                                <option value="PRIMERA">Primera Vez</option>
-                                <option value="RUTINA">Rutina</option>
-                            </select>
-                        </div>
-                        <div class="col-md-8">
-                            <label class="form-label small fw-bold">Motivo de la Visita</label>
-                            <input type="text" name="cita_motivo" class="form-control" placeholder="Ej: Toma de tensión">
-                        </div>
-                    </div>
-                </div>
+<!-- TAB 2: DIRECCIÓN -->
+<div class="tab-pane fade" id="address" role="tabpanel">
+<div class="row g-3">
+<div class="col-md-4">
+<label class="form-label small fw-bold">Estado</label>
+<select id="id_estado" name="estado" class="form-select" required>
+<option value="">Seleccione Estado...</option>
+{% for e in estados %}
+<option value="{{ e.id }}">{{ e.valor }}</option>
+{% endfor %}
+</select>
+</div>
+<div class="col-md-4">
+<label class="form-label small fw-bold">Municipio</label>
+<select id="id_municipio" name="municipio" class="form-select" disabled required>
+<option value="">Seleccione Estado primero...</option>
+</select>
+</div>
+<div class="col-md-4">
+<label class="form-label small fw-bold">Parroquia</label>
+<select id="id_parroquia" name="parroquia" class="form-select" disabled required>
+<option value="">Seleccione Municipio primero...</option>
+</select>
+</div>
+<div class="col-md-6">
+<label class="form-label small fw-bold">Sector / Comunidad</label>
+<div class="input-group">
+<select id="id_sector" name="direccion_id" class="form-select" disabled required>
+<option value="">Seleccione Parroquia primero...</option>
+</select>
+<button type="button" class="btn btn-outline-primary" id="btn-add-sector">
+<i class="bi bi-plus-lg"></i>
+</button>
+</div>
+</div>
+<div class="col-md-6">
+<label class="form-label small fw-bold">Detalle de Dirección</label>
+<input type="text" name="detalle_direccion" class="form-control">
+</div>
+</div>
+</div>
 
-            </div>
+<!-- TAB 3: BIOLÓGICOS -->
+<div class="tab-pane fade" id="health" role="tabpanel">
+<div class="row g-3">
+<div class="col-md-4">
+<label class="form-label small fw-bold">Fecha de Nacimiento</label>
+<input type="date" name="fecha_nacimiento" class="form-control" required>
+</div>
+<div class="col-md-4">
+<label class="form-label small fw-bold">Tipo de Sangre</label>
+<select name="sangre_id" class="form-select">
+<option value="">Seleccione...</option>
+{% for s in sangre %}
+<option value="{{ s.id }}">{{ s.tipo_sangre }}</option>
+{% endfor %}
+</select>
+</div>
+<div class="col-md-4">
+<label class="form-label small fw-bold">Etnia</label>
+<select name="etnia_id" class="form-select">
+<option value="">Seleccione...</option>
+{% for et in etnias %}
+<option value="{{ et.id }}">{{ et.tipo_etnia }}</option>
+{% endfor %}
+</select>
+</div>
+<div class="col-md-4">
+<label class="form-label small fw-bold">Discapacidad</label>
+<select name="discapacidad_id" class="form-select">
+<option value="">Ninguna</option>
+{% for d in discapacidades %}
+<option value="{{ d.id }}">{{ d.tipo_discapacidad }}</option>
+{% endfor %}
+</select>
+</div>
+</div>
+</div>
 
-            <div class="mt-5 text-end">
-                <button type="reset" class="btn btn-light me-2">Limpiar Formulario</button>
-                <button type="submit" class="btn btn-corporate px-5 fw-bold">
-                    Guardar Todo <i class="bi bi-save"></i>
-                </button>
-            </div>
-        </form>
-    </div>
+<!-- TAB 4: CITA MÉDICA -->
+<div class="tab-pane fade" id="appointment" role="tabpanel">
+<div class="row g-3">
+<div class="col-md-4">
+<label class="form-label small fw-bold">Especialidad</label>
+<select id="id_especialidad" class="form-select">
+<option value="">Seleccione Especialidad...</option>
+{% for esp in especialidades %}
+<option value="{{ esp.id }}">{{ esp.descripcion }}</option>
+{% endfor %}
+</select>
+</div>
+<div class="col-md-4">
+<label class="form-label small fw-bold">Médico</label>
+<select name="medico_id" id="id_medico" class="form-select">
+<option value="">Seleccione Especialidad primero...</option>
+{% for m in medicos %}
+<option value="{{ m.id }}" data-esp="{{ m.especialidad.id }}">{{ m.persona.nombre }} {{ m.persona.apellido }}</option>
+{% endfor %}
+</select>
+</div>
+<div class="col-md-4">
+<label class="form-label small fw-bold">Tipo de Cita</label>
+<select name="tipo_cita" class="form-select">
+<option value="">Seleccione...</option>
+{% for valor, etiqueta in tipos_cita %}
+<option value="{{ valor }}">{{ etiqueta }}</option>
+{% endfor %}
+</select>
+</div>
+<div class="col-md-4">
+<label class="form-label small fw-bold">Fecha de Atención</label>
+<input type="date" name="cita_fecha" class="form-control">
+</div>
+<div class="col-md-4">
+<label class="form-label small fw-bold">Observación de la Cita</label>
+<input type="text" name="cita_observacion" class="form-control" placeholder="Ej: Toma de tensión">
+</div>
+</div>
+</div>
+
+</div>
+
+<div class="mt-5 text-end">
+<button type="reset" class="btn btn-light me-2">Limpiar Formulario</button>
+<button type="submit" class="btn btn-corporate px-5 fw-bold">
+Guardar Todo <i class="bi bi-save"></i>
+</button>
+</div>
+</form>
+</div>
 </div>
 
 <!-- Modal para añadir sector -->
 <div class="modal fade" id="modalSector" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-4">
-            <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold">Añadir Nuevo Sector</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label class="form-label small fw-bold">Nombre del Sector</label>
-                    <input type="text" id="new_sector_name" class="form-control" placeholder="Ej. Barrio El Centro">
-                </div>
-                <input type="hidden" id="new_sector_parent">
-            </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-corporate" id="btn-save-sector">Guardar Sector</button>
-            </div>
-        </div>
-    </div>
+<div class="modal-dialog modal-dialog-centered">
+<div class="modal-content rounded-4">
+<div class="modal-header border-0">
+<h5 class="modal-title fw-bold">Añadir Nuevo Sector</h5>
+<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+<div class="modal-body">
+<div class="mb-3">
+<label class="form-label small fw-bold">Nombre del Sector</label>
+<input type="text" id="new_sector_name" class="form-control" placeholder="Ej. Barrio El Centro">
+</div>
+<input type="hidden" id="new_sector_parent">
+</div>
+<div class="modal-footer border-0">
+<button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+<button type="button" class="btn btn-corporate" id="btn-save-sector">Guardar Sector</button>
+</div>
+</div>
+</div>
 </div>
 
 {% endblock %}
 
 {% block scripts %}
 <script>
-    const API_URL = "{% url 'identificacion:api_direcciones' %}";
-    const API_CREATE_URL = "{% url 'identificacion:api_crear_sector' %}";
-    const API_ANTEC_URL = "{% url 'identificacion:api_antecedentes' %}";
+const API_URL = "{% url 'identificacion:api_direcciones' %}";
+const API_CREATE_URL = "{% url 'identificacion:api_crear_sector' %}";
+const API_ANTEC_URL = "{% url 'identificacion:api_antecedentes' %}";
 
-    async function loadOptions(endpoint, targetId, parentId = null) {
-        const url = parentId ? `${endpoint}?parent_id=${parentId}` : endpoint;
-        const response = await fetch(url);
-        const data = await response.json();
-        const select = document.getElementById(targetId);
-        select.innerHTML = `<option value="">Seleccione...</option>`;
-        data.forEach(item => {
-            const opt = document.createElement('option');
-            opt.value = item.id;
-            opt.textContent = item.dsc;
-            select.appendChild(opt);
-        });
-        select.disabled = false;
-    }
+async function loadOptions(endpoint, targetId, parentId = null) {
+const url = parentId ? `${endpoint}?parent_id=${parentId}` : endpoint;
+const response = await fetch(url);
+const data = await response.json();
+const select = document.getElementById(targetId);
+select.innerHTML = `<option value="">Seleccione...</option>`;
+data.forEach(item => {
+const opt = document.createElement('option');
+opt.value = item.id;
+opt.textContent = item.valor;
+select.appendChild(opt);
+});
+select.disabled = false;
+}
 
-    document.getElementById('id_estado').addEventListener('change', async (e) => {
-        const val = e.target.value;
-        if (val) {
-            await loadOptions(API_URL, 'id_municipio', val);
-            document.getElementById('id_parroquia').innerHTML = '<option value="">Seleccione Municipio primero...</option>';
-            document.getElementById('id_parroquia').disabled = true;
-            document.getElementById('id_sector').innerHTML = '<option value="">Seleccione Parroquia primero...</option>';
-            document.getElementById('id_sector').disabled = true;
-        }
-    });
+document.getElementById('id_estado').addEventListener('change', async (e) => {
+const val = e.target.value;
+if (val) {
+await loadOptions(API_URL, 'id_municipio', val);
+document.getElementById('id_parroquia').innerHTML = '<option value="">Seleccione Municipio primero...</option>';
+document.getElementById('id_parroquia').disabled = true;
+document.getElementById('id_sector').innerHTML = '<option value="">Seleccione Parroquia primero...</option>';
+document.getElementById('id_sector').disabled = true;
+}
+});
 
-    document.getElementById('id_municipio').addEventListener('change', async (e) => {
-        const val = e.target.value;
-        if (val) {
-            await loadOptions(API_URL, 'id_parroquia', val);
-            document.getElementById('id_sector').innerHTML = '<option value="">Seleccione Parroquia primero...</option>';
-            document.getElementById('id_sector').disabled = true;
-        }
-    });
+document.getElementById('id_municipio').addEventListener('change', async (e) => {
+const val = e.target.value;
+if (val) {
+await loadOptions(API_URL, 'id_parroquia', val);
+document.getElementById('id_sector').innerHTML = '<option value="">Seleccione Parroquia primero...</option>';
+document.getElementById('id_sector').disabled = true;
+}
+});
 
-    document.getElementById('id_parroquia').addEventListener('change', async (e) => {
-        const val = e.target.value;
-        if (val) {
-            await loadOptions(API_URL, 'id_sector', val);
-        }
-    });
+document.getElementById('id_parroquia').addEventListener('change', async (e) => {
+const val = e.target.value;
+if (val) {
+await loadOptions(API_URL, 'id_sector', val);
+}
+});
 
-    document.getElementById('id_especialidad').addEventListener('change', function() {
-        const espId = this.value;
-        const medicoSelect = document.getElementById('id_medico');
-        const options = medicoSelect.querySelectorAll('option');
-        medicoSelect.innerHTML = '<option value="">Seleccione Médico...</option>';
-        options.forEach(opt => {
-            if (opt.value === "" ) return;
-            if (opt.getAttribute('data-esp') === espId) {
-                medicoSelect.appendChild(opt);
-            }
-        });
-    });
+document.getElementById('id_especialidad').addEventListener('change', function() {
+const espId = this.value;
+const medicoSelect = document.getElementById('id_medico');
+const options = medicoSelect.querySelectorAll('option');
+medicoSelect.innerHTML = '<option value="">Seleccione Médico...</option>';
+options.forEach(opt => {
+if (opt.value === "" ) return;
+if (opt.getAttribute('data-esp') === espId) {
+medicoSelect.appendChild(opt);
+}
+});
+});
 
-    const modalSector = new bootstrap.Modal(document.getElementById('modalSector'));
-    document.getElementById('btn-add-sector').addEventListener('click', () => {
-        const parishId = document.getElementById('id_parroquia').value;
-        if (!parishId) return alert('Por favor seleccione una parroquia primero');
-        document.getElementById('new_sector_parent').value = parishId;
-        modalSector.show();
-    });
+const modalSector = new bootstrap.Modal(document.getElementById('modalSector'));
+document.getElementById('btn-add-sector').addEventListener('click', () => {
+const parishId = document.getElementById('id_parroquia').value;
+if (!parishId) return alert('Por favor seleccione una parroquia primero');
+document.getElementById('new_sector_parent').value = parishId;
+modalSector.show();
+});
 
-    document.getElementById('btn-save-sector').addEventListener('click', async () => {
-        const name = document.getElementById('new_sector_name').value;
-        const parentId = document.getElementById('new_sector_parent').value;
-        if (!name) return alert('Ingrese el nombre del sector');
+document.getElementById('btn-save-sector').addEventListener('click', async () => {
+const name = document.getElementById('new_sector_name').value;
+const parentId = document.getElementById('new_sector_parent').value;
+if (!name) return alert('Ingrese el nombre del sector');
 
-        const response = await fetch(API_CREATE_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
-            body: JSON.stringify({ nombre: name, parent_id: parentId })
-        });
+const response = await fetch(API_CREATE_URL, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+body: JSON.stringify({ nombre: name, parent_id: parentId })
+});
 
-        if (response.ok) {
-            const data = await response.json();
-            const select = document.getElementById('id_sector');
-            const opt = document.createElement('option');
-            opt.value = data.id;
-            opt.textContent = data.dsc;
-            opt.selected = true;
-            select.appendChild(opt);
-            document.getElementById('new_sector_name').value = '';
-            modalSector.hide();
-        }
-    });
+if (response.ok) {
+const data = await response.json();
+const select = document.getElementById('id_sector');
+const opt = document.createElement('option');
+opt.value = data.id;
+opt.textContent = data.valor;
+opt.selected = true;
+select.appendChild(opt);
+document.getElementById('new_sector_name').value = '';
+modalSector.hide();
+}
+});
 </script>
 {% endblock %}
 

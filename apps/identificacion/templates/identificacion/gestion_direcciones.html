@@ -2,12 +2,16 @@
 {% block content %}
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold">📍 Configuración de Direcciones</h2>
+        <h2 class="fw-bold">Configuración de Direcciones</h2>
         <a href="{% url 'usuarios:configuracion' %}" class="btn btn-outline-secondary rounded-pill">
             <i class="bi bi-gear"></i> Configuración
         </a>
     </div>
-    <p class="text-muted">Registra la jerarquía: Estado → Municipio → Parroquia → Sector/Calle. El padre solo ofrece el nivel inmediatamente superior.</p>
+    <p class="text-muted">
+        Jerarquía: Estado → Municipio → Parroquia → Calle/Sector.
+        El selector de padre solo ofrece el nivel inmediatamente superior, así
+        ninguna dirección queda huérfana.
+    </p>
 
     <ul class="nav nav-tabs mb-4" role="tablist">
         <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#lista"><i class="bi bi-list"></i> Lista</button></li>
@@ -19,33 +23,38 @@
         <div class="tab-pane fade show active" id="lista">
             {% for g in grupos %}
             <div class="card card-custom p-4 mb-3">
-                <h6 class="fw-bold mb-3">
-                    {% if g.tipo == 1 %}🏙️
-                    {% elif g.tipo == 2 %}🏘️
-                    {% elif g.tipo == 3 %}🗺️
-                    {% else %}🏠{% endif %}
-                    {{ g.etiqueta }}s <span class="badge bg-light text-dark">{{ g.items|length }}</span>
-                </h6>
+                <h6 class="fw-bold mb-3">{{ g.etiqueta }} <span class="badge bg-light text-dark">{{ g.items|length }}</span></h6>
                 <div class="table-responsive">
                     <table class="table table-hover table-sm align-middle mb-0">
                         <thead class="table-light">
-                            <tr><th style="width:60px">ID</th><th>Descripción</th><th>Pertenece a</th><th class="text-end">Acciones</th></tr>
+                            <tr>
+                                <th style="width:60px">ID</th>
+                                <th>Nombre</th>
+                                <th>Nivel</th>
+                                <th>Pertenece a</th>
+                                <th class="text-end">Acciones</th>
+                            </tr>
                         </thead>
                         <tbody>
-                            {% for d in g.items %}
+                            {% for item in g.items %}
                             <tr>
-                                <td>{{ d.id }}</td>
-                                <td>{{ d.dsc }}</td>
-                                <td>{{ d.depid.dsc|default:'-' }}</td>
+                                <td>{{ item.d.id }}</td>
+                                <td>{{ item.d.valor }}</td>
+                                <td>{{ item.d.division_politica }}</td>
+                                <td>{{ item.padre }}</td>
                                 <td class="text-end">
-                                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalEditDir"
-                                            data-id="{{ d.id }}" data-dsc="{{ d.dsc }}" data-depid="{{ d.depid_id|default:'' }}" data-tipo="{{ d.tipo|default:'' }}">
+                                    <button class="btn btn-sm btn-outline-primary"
+                                            data-bs-toggle="modal" data-bs-target="#modalEditDir"
+                                            data-id="{{ item.d.id }}"
+                                            data-valor="{{ item.d.valor }}"
+                                            data-tipo="{{ item.d.tipo }}"
+                                            data-padre="{{ item.d.divicion_politica_id }}">
                                         <i class="bi bi-pencil"></i> Modificar
                                     </button>
                                 </td>
                             </tr>
                             {% empty %}
-                            <tr><td colspan="4" class="text-center text-muted">Sin registros</td></tr>
+                            <tr><td colspan="5" class="text-center text-muted">Sin registros</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
@@ -64,21 +73,23 @@
                         <div class="col-md-4">
                             <label class="form-label small fw-bold">Nivel *</label>
                             <select name="tipo" id="reg_tipo" class="form-select" required>
-                                {% for val, etiqueta in tipos %}
-                                <option value="{{ val }}">{{ etiqueta }}</option>
+                                {% for valor, etiqueta in tipos %}
+                                <option value="{{ valor }}" {% if valor == 1 %}selected{% endif %}>{{ etiqueta }}</option>
                                 {% endfor %}
                             </select>
+                            <small class="text-muted">1 = Estado, 2 = Municipio, 3 = Parroquia, 4 = Calle/Sector</small>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label small fw-bold">Pertenece a (padre)</label>
-                            <select name="depid" id="reg_depid" class="form-select" disabled>
-                                <option value="">— Un Estado no tiene padre —</option>
+                            <label class="form-label small fw-bold">Pertenece a (padre) *</label>
+                            <select name="divicion_politica_id" id="reg_padre" class="form-select">
+                                <option value="0">NINGUNO</option>
                             </select>
-                            <small class="text-muted" id="reg_padre_hint">El padre se filtra según el nivel elegido.</small>
+                            <small class="text-muted" id="reg_hint">Un Estado no depende de nadie (NINGUNO).</small>
                         </div>
                         <div class="col-md-4">
-                            <label class="form-label small fw-bold">Descripción *</label>
-                            <input type="text" name="dsc" class="form-control" required placeholder="Ej: Táchira, San Cristóbal...">
+                            <label class="form-label small fw-bold">Nombre *</label>
+                            <input type="text" name="valor" class="form-control" required
+                                   placeholder="Ej: Monagas, Maturín, Palo Negro...">
                         </div>
                     </div>
                     <div class="mt-4 text-end">
@@ -100,20 +111,19 @@
         <input type="hidden" name="id" id="edit_dir_id">
         <div class="modal-header">
           <h5 class="modal-title fw-bold">Modificar Dirección</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <button type="button" class="btn btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <label class="form-label small fw-bold">Nivel</label>
           <select name="tipo" id="edit_dir_tipo" class="form-select mb-3">
-            {% for val, etiqueta in tipos %}
-            <option value="{{ val }}">{{ etiqueta }}</option>
+            {% for valor, etiqueta in tipos %}
+            <option value="{{ valor }}">{{ etiqueta }}</option>
             {% endfor %}
           </select>
           <label class="form-label small fw-bold">Pertenece a (padre)</label>
-          <select name="depid" id="edit_dir_depid" class="form-select mb-3">
-          </select>
-          <label class="form-label small fw-bold">Descripción</label>
-          <input type="text" name="dsc" id="edit_dir_dsc" class="form-control" required>
+          <select name="divicion_politica_id" id="edit_dir_padre" class="form-select mb-3"></select>
+          <label class="form-label small fw-bold">Nombre</label>
+          <input type="text" name="valor" id="edit_dir_valor" class="form-control" required>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
@@ -127,50 +137,58 @@
 
 {% block scripts %}
 <script>
-// Todas las direcciones con su nivel, para filtrar padres en el cliente
-const DIRECCIONES = [
-    {% for d in direcciones %}
-    {id: {{ d.id }}, dsc: "{{ d.dsc|escapejs }}", tipo: {{ d.tipo|default:'null' }}},
-    {% endfor %}
-];
+// Padres válidos por nivel: {"1":[NINGUNO], "2":[estados], ...}
+const PADRES = {{ padres_json|safe }};
+// Etiqueta de cada nivel: {"1":"Estado", "2":"Municipio", ...}
+const TIPOS_LABEL = {{ tipos_labels|safe }};
 
-// Nivel → etiqueta del padre esperado
-const PADRE_LABEL = {1: null, 2: 'Estado', 3: 'Municipio', 4: 'Parroquia'};
-
-function actualizarPadres(tipoSelId, padreSelId, selectedPadre) {
-    const tipo = parseInt(document.getElementById(tipoSelId).value);
-    const padreSel = document.getElementById(padreSelId);
-    const labelPadre = PADRE_LABEL[tipo];
-    padreSel.innerHTML = '';
-    if (!labelPadre) {  // Estado: sin padre
-        padreSel.innerHTML = '<option value="">— Un Estado no tiene padre —</option>';
-        padreSel.disabled = true;
-        return;
-    }
-    const padres = DIRECCIONES.filter(d => d.tipo === tipo - 1);
-    padreSel.innerHTML = `<option value="">— Seleccione ${labelPadre} —</option>` +
-        padres.map(d => `<option value="${d.id}">${d.dsc}</option>`).join('');
-    padreSel.disabled = false;
-    if (selectedPadre) padreSel.value = selectedPadre;
-    if (!padreSel.value) padreSel.selectedIndex = 0;
+function pintarPadres(selId, tipo, seleccionado) {
+    const sel = document.getElementById(selId);
+    const opciones = PADRES[String(tipo)] || [];
+    sel.innerHTML = '';
+    opciones.forEach(function (o) {
+        const opt = document.createElement('option');
+        opt.value = o.id;
+        opt.textContent = o.valor;
+        sel.appendChild(opt);
+    });
+    if (seleccionado) sel.value = seleccionado;
 }
 
-// Formulario de registro: filtra padres al cambiar el nivel
-document.getElementById('reg_tipo').addEventListener('change', function () {
-    actualizarPadres('reg_tipo', 'reg_depid');
-});
-actualizarPadres('reg_tipo', 'reg_depid');
+// --- Formulario de registro ---
+const regTipo = document.getElementById('reg_tipo');
+const regPadre = document.getElementById('reg_padre');
+const regHint = document.getElementById('reg_hint');
 
-// Modal de edición
+function actualizarRegistro() {
+    const tipo = parseInt(regTipo.value);
+    if (tipo === 1) {
+        // La raíz no depende de nadie: apunta a la ancla NINGUNO
+        regPadre.innerHTML = '<option value="0">NINGUNO</option>';
+        regPadre.disabled = true;
+        regHint.textContent = 'Un Estado no depende de nadie (NINGUNO).';
+    } else {
+        regPadre.disabled = false;
+        const anterior = TIPOS_LABEL[String(tipo - 1)] || 'el nivel anterior';
+        regHint.textContent = 'Solo se ofrecen ' + anterior.toLowerCase() + '.';
+        pintarPadres('reg_padre', tipo);
+    }
+}
+
+regTipo.addEventListener('change', actualizarRegistro);
+actualizarRegistro();
+
+// --- Modal de edición ---
 document.getElementById('modalEditDir').addEventListener('show.bs.modal', function (event) {
     const b = event.relatedTarget;
     document.getElementById('edit_dir_id').value = b.getAttribute('data-id');
-    document.getElementById('edit_dir_dsc').value = b.getAttribute('data-dsc');
-    document.getElementById('edit_dir_tipo').value = b.getAttribute('data-tipo') || '1';
-    actualizarPadres('edit_dir_tipo', 'edit_dir_depid', b.getAttribute('data-depid') || '');
+    document.getElementById('edit_dir_valor').value = b.getAttribute('data-valor');
+    const tipo = b.getAttribute('data-tipo') || '1';
+    document.getElementById('edit_dir_tipo').value = tipo;
+    pintarPadres('edit_dir_padre', parseInt(tipo), b.getAttribute('data-padre') || '');
 });
 document.getElementById('edit_dir_tipo').addEventListener('change', function () {
-    actualizarPadres('edit_dir_tipo', 'edit_dir_depid');
+    pintarPadres('edit_dir_padre', parseInt(this.value));
 });
 </script>
 {% endblock %}

@@ -1,204 +1,204 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold">👨‍⚕️ Gestión de Médicos</h2>
-    </div>
+<div class="d-flex justify-content-between align-items-center mb-4">
+<h2 class="fw-bold">‍ Gestión de Médicos</h2>
+</div>
 
-    <ul class="nav nav-tabs mb-4" id="medicosTabs" role="tablist">
-        <li class="nav-item">
-            <button class="nav-link active" id="list-tab" data-bs-toggle="tab" data-bs-target="#list" type="button">
-                <i class="bi bi-people"></i> Visualizar Médicos
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button">
-                <i class="bi bi-person-plus"></i> Registrar Médico
-            </button>
-        </li>
-    </ul>
+<ul class="nav nav-tabs mb-4" id="medicosTabs" role="tablist">
+<li class="nav-item">
+<button class="nav-link active" id="list-tab" data-bs-toggle="tab" data-bs-target="#list" type="button">
+<i class="bi bi-people"></i> Visualizar Médicos
+</button>
+</li>
+<li class="nav-item">
+<button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register" type="button">
+<i class="bi bi-person-plus"></i> Registrar Médico
+</button>
+</li>
+</ul>
 
-    <div class="tab-content">
-        <!-- TAB VISUALIZAR -->
-        <div class="tab-pane fade show active" id="list" role="tabpanel">
-            <div class="card card-custom p-4">
-                {% if medicos %}
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>ID</th>
-                                <th>Nombre</th>
-                                <th>Cédula</th>
-                                <th>Especialidad</th>
-                                <th>Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for m in medicos %}
-                            <tr>
-                                <td>{{ m.id }}</td>
-                                <td>{{ m.persona.nombre }} {{ m.persona.apellido }}</td>
-                                <td>
-                                    {% with ident=m.persona.identificaciones.first %}
-                                        {{ ident.valor }} {% if ident %}{{ ident.dsc }}{% endif %}
-                                    {% endwith %}
-                                </td>
-                                <td>{{ m.especialidad.descripcion }}</td>
-                                <td>
-                                    {% if m.estado %}<span class="badge bg-success">Activo</span>{% else %}<span class="badge bg-secondary">Inactivo</span>{% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                {% else %}
-                <div class="text-center py-5">
-                    <i class="bi bi-people display-4 text-muted"></i>
-                    <h5 class="fw-bold mt-3">No hay médicos registrados</h5>
-                </div>
-                {% endif %}
-            </div>
-        </div>
+<div class="tab-content">
+<!-- TAB VISUALIZAR -->
+<div class="tab-pane fade show active" id="list" role="tabpanel">
+<div class="card card-custom p-4">
+{% if medicos %}
+<div class="table-responsive">
+<table class="table table-hover align-middle">
+<thead class="table-light">
+<tr>
+<th>ID</th>
+<th>Nombre</th>
+<th>Cédula</th>
+<th>Especialidad</th>
+<th>Estado</th>
+</tr>
+</thead>
+<tbody>
+{% for m in medicos %}
+<tr>
+<td>{{ m.id }}</td>
+<td>{{ m.persona.nombre }} {{ m.persona.apellido }}</td>
+<td>
+{% with ident=m.persona.identificaciones.first %}
+{{ ident.valor }} {% if ident %}{{ ident.descripcion }}{% endif %}
+{% endwith %}
+</td>
+<td>{{ m.especialidad.descripcion }}</td>
+<td>
+{% if m.estado %}<span class="badge bg-success">Activo</span>{% else %}<span class="badge bg-secondary">Inactivo</span>{% endif %}
+</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+{% else %}
+<div class="text-center py-5">
+<i class="bi bi-people display-4 text-muted"></i>
+<h5 class="fw-bold mt-3">No hay médicos registrados</h5>
+</div>
+{% endif %}
+</div>
+</div>
 
-        <!-- TAB REGISTRAR -->
-        <div class="tab-pane fade" id="register" role="tabpanel">
-            <div class="card card-custom p-4">
-                <form method="post">
-                    {% csrf_token %}
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Nombre</label>
-                            <input type="text" name="nombre" class="form-control" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Apellido</label>
-                            <input type="text" name="apellido" class="form-control" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Sexo</label>
-                            <select name="sexo" class="form-select">
-                                <option value="M">Masculino</option>
-                                <option value="F">Femenino</option>
-                                <option value="O">Otro</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Documento Identidad</label>
-                            <div class="input-group">
-                                <select name="identificacion_tipo" class="form-select" style="max-width:150px;">
-                                    <option value="Cédula">Cédula</option>
-                                    <option value="Pasaporte">Pasaporte</option>
-                                    <option value="Otro">Otro</option>
-                                </select>
-                                <input type="text" name="identificacion_valor" class="form-control" required>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Fecha de Nacimiento</label>
-                            <input type="date" name="fecha_nacimiento" class="form-control" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Tipo de Sangre</label>
-                            <select name="sangre_id" class="form-select">
-                                <option value="">Seleccione...</option>
-                                {% for s in sangre %}
-                                <option value="{{ s.id }}">{{ s.tipo_sangre }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Etnia</label>
-                            <select name="etnia_id" class="form-select">
-                                <option value="">Seleccione...</option>
-                                {% for e in etnias %}
-                                <option value="{{ e.id }}">{{ e.tipo_etnia }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
+<!-- TAB REGISTRAR -->
+<div class="tab-pane fade" id="register" role="tabpanel">
+<div class="card card-custom p-4">
+<form method="post">
+{% csrf_token %}
+<div class="row g-3">
+<div class="col-md-4">
+<label class="form-label small fw-bold">Nombre</label>
+<input type="text" name="nombre" class="form-control" required>
+</div>
+<div class="col-md-4">
+<label class="form-label small fw-bold">Apellido</label>
+<input type="text" name="apellido" class="form-control" required>
+</div>
+<div class="col-md-4">
+<label class="form-label small fw-bold">Sexo</label>
+<select name="sexo" class="form-select">
+<option value="M">Masculino</option>
+<option value="F">Femenino</option>
+<option value="O">Otro</option>
+</select>
+</div>
+<div class="col-md-4">
+<label class="form-label small fw-bold">Documento Identidad</label>
+<div class="input-group">
+<select name="identificacion_tipo" class="form-select" style="max-width:150px;">
+<option value="Cédula">Cédula</option>
+<option value="Pasaporte">Pasaporte</option>
+<option value="Otro">Otro</option>
+</select>
+<input type="text" name="identificacion_valor" class="form-control" required>
+</div>
+</div>
+<div class="col-md-4">
+<label class="form-label small fw-bold">Fecha de Nacimiento</label>
+<input type="date" name="fecha_nacimiento" class="form-control" required>
+</div>
+<div class="col-md-4">
+<label class="form-label small fw-bold">Tipo de Sangre</label>
+<select name="sangre_id" class="form-select">
+<option value="">Seleccione...</option>
+{% for s in sangre %}
+<option value="{{ s.id }}">{{ s.tipo_sangre }}</option>
+{% endfor %}
+</select>
+</div>
+<div class="col-md-4">
+<label class="form-label small fw-bold">Etnia</label>
+<select name="etnia_id" class="form-select">
+<option value="">Seleccione...</option>
+{% for e in etnias %}
+<option value="{{ e.id }}">{{ e.tipo_etnia }}</option>
+{% endfor %}
+</select>
+</div>
 
-                        <!-- Dirección jerárquica -->
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold">Estado</label>
-                            <select id="med_estado" class="form-select" required>
-                                <option value="">Seleccione...</option>
-                                {% for e in estados %}
-                                <option value="{{ e.id }}">{{ e.dsc }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold">Municipio</label>
-                            <select id="med_municipio" class="form-select" disabled required>
-                                <option value="">Seleccione Estado primero...</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold">Parroquia</label>
-                            <select id="med_parroquia" class="form-select" disabled required>
-                                <option value="">Seleccione Municipio primero...</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold">Sector</label>
-                            <select name="direccion_id" id="med_sector" class="form-select" disabled required>
-                                <option value="">Seleccione Parroquia primero...</option>
-                            </select>
-                        </div>
+<!-- Dirección jerárquica -->
+<div class="col-md-3">
+<label class="form-label small fw-bold">Estado</label>
+<select id="med_estado" class="form-select" required>
+<option value="">Seleccione...</option>
+{% for e in estados %}
+<option value="{{ e.id }}">{{ e.valor }}</option>
+{% endfor %}
+</select>
+</div>
+<div class="col-md-3">
+<label class="form-label small fw-bold">Municipio</label>
+<select id="med_municipio" class="form-select" disabled required>
+<option value="">Seleccione Estado primero...</option>
+</select>
+</div>
+<div class="col-md-3">
+<label class="form-label small fw-bold">Parroquia</label>
+<select id="med_parroquia" class="form-select" disabled required>
+<option value="">Seleccione Municipio primero...</option>
+</select>
+</div>
+<div class="col-md-3">
+<label class="form-label small fw-bold">Sector</label>
+<select name="direccion_id" id="med_sector" class="form-select" disabled required>
+<option value="">Seleccione Parroquia primero...</option>
+</select>
+</div>
 
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Especialidad</label>
-                            <select name="especialidad_id" class="form-select" required>
-                                <option value="">Seleccione...</option>
-                                {% for esp in especialidades %}
-                                <option value="{{ esp.id }}">{{ esp.descripcion }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="mt-4 text-end">
-                        <button type="submit" class="btn btn-corporate px-4 fw-bold">Guardar Médico</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+<div class="col-md-6">
+<label class="form-label small fw-bold">Especialidad</label>
+<select name="especialidad_id" class="form-select" required>
+<option value="">Seleccione...</option>
+{% for esp in especialidades %}
+<option value="{{ esp.id }}">{{ esp.descripcion }}</option>
+{% endfor %}
+</select>
+</div>
+</div>
+<div class="mt-4 text-end">
+<button type="submit" class="btn btn-corporate px-4 fw-bold">Guardar Médico</button>
+</div>
+</form>
+</div>
+</div>
+</div>
 </div>
 
 <script>
 const API_URL = "{% url 'identificacion:api_direcciones' %}";
 async function loadOptions(endpoint, targetId, parentId = null) {
-    const url = parentId ? `${endpoint}?parent_id=${parentId}` : endpoint;
-    const res = await fetch(url);
-    const data = await res.json();
-    const sel = document.getElementById(targetId);
-    sel.innerHTML = '<option value="">Seleccione...</option>';
-    data.forEach(item => {
-        const opt = document.createElement('option');
-        opt.value = item.id;
-        opt.textContent = item.dsc;
-        sel.appendChild(opt);
-    });
-    sel.disabled = false;
+const url = parentId ? `${endpoint}?parent_id=${parentId}` : endpoint;
+const res = await fetch(url);
+const data = await res.json();
+const sel = document.getElementById(targetId);
+sel.innerHTML = '<option value="">Seleccione...</option>';
+data.forEach(item => {
+const opt = document.createElement('option');
+opt.value = item.id;
+opt.textContent = item.valor;
+sel.appendChild(opt);
+});
+sel.disabled = false;
 }
 document.getElementById('med_estado').addEventListener('change', e => {
-    if(e.target.value){
-        loadOptions(API_URL, 'med_municipio', e.target.value);
-        document.getElementById('med_parroquia').innerHTML = '<option value="">Seleccione Municipio primero...</option>'; document.getElementById('med_parroquia').disabled = true;
-        document.getElementById('med_sector').innerHTML = '<option value="">Seleccione Parroquia primero...</option>'; document.getElementById('med_sector').disabled = true;
-    }
+if(e.target.value){
+loadOptions(API_URL, 'med_municipio', e.target.value);
+document.getElementById('med_parroquia').innerHTML = '<option value="">Seleccione Municipio primero...</option>'; document.getElementById('med_parroquia').disabled = true;
+document.getElementById('med_sector').innerHTML = '<option value="">Seleccione Parroquia primero...</option>'; document.getElementById('med_sector').disabled = true;
+}
 });
 document.getElementById('med_municipio').addEventListener('change', e => {
-    if(e.target.value){
-        loadOptions(API_URL, 'med_parroquia', e.target.value);
-        document.getElementById('med_sector').innerHTML = '<option value="">Seleccione Parroquia primero...</option>'; document.getElementById('med_sector').disabled = true;
-    }
+if(e.target.value){
+loadOptions(API_URL, 'med_parroquia', e.target.value);
+document.getElementById('med_sector').innerHTML = '<option value="">Seleccione Parroquia primero...</option>'; document.getElementById('med_sector').disabled = true;
+}
 });
 document.getElementById('med_parroquia').addEventListener('change', e => {
-    if(e.target.value){
-        loadOptions(API_URL, 'med_sector', e.target.value);
-    }
+if(e.target.value){
+loadOptions(API_URL, 'med_sector', e.target.value);
+}
 });
 </script>
 {% endblock %}

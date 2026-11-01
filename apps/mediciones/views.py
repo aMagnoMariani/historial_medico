@@ -1,13 +1,16 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from apps.usuarios.permissions import permiso_requerido
+from apps.usuarios.permissions import permiso_requerido, valida_accion
 from .models import Equipos, Parametros, EquipoParametros
 
 @login_required
-@permiso_requerido('mediciones.editar')
+@permiso_requerido('config-mediciones.ver')
 def gestion_config_mediciones(request):
     if request.method == 'POST':
         action = request.POST.get('action')
+        rechazo = valida_accion(request, action, 'config-mediciones')
+        if rechazo:
+            return rechazo
         if action == 'crear_equipo':
             Equipos.objects.create(
                 nombre=request.POST.get('nombre'),

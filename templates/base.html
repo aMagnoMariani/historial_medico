@@ -1,15 +1,19 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema Clínico - Consultorio Popular</title>
-    <!-- Bootstrap 5.3 -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap 5.3 (local en static/) -->
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Bootstrap Icons (local en static/) -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap-icons.css' %}">
+    <!-- AlertifyJS: notificaciones y diálogos (local en static/alertify) -->
+    <link rel="stylesheet" href="{% static 'alertify/alertify.min.css' %}">
+    <link rel="stylesheet" href="{% static 'alertify/bootstrap.min.css' %}">
     <style>
         :root {
             --pastel-blue-light: #e3f2fd;
@@ -97,63 +101,80 @@
     {% if request.user.is_authenticated %}
     <div class="sidebar">
         <div class="sidebar-header">
-            <h4>🏥 Clínica Pop.</h4>
+            <h4><i class="bi bi-hospital"></i> Clínica Popular</h4>
             <small class="text-muted">{{ request.user.get_full_name|default:request.user.username }}</small>
         </div>
         <div class="nav flex-column mt-4">
-            {% if request.user.rol.nombre == 'SuperAdmin' %}
-                <a href="{% url 'usuarios:home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
-                    <i class="bi bi-speedometer2"></i> Dashboard
-                </a>
-                <div class="px-3 py-2 small text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Gestión</div>
-                <a href="{% url 'identificacion:registrar_paciente' %}" class="nav-link {% if 'registrar' in request.path %}active{% endif %}">
-                    <i class="bi bi-person-plus"></i> Registrar Paciente
-                </a>
-                <a href="{% url 'identificacion:lista_pacientes' %}" class="nav-link {% if 'pacientes' in request.path %}active{% endif %}">
-                    <i class="bi bi-people"></i> Pacientes
-                </a>
-                <a href="{% url 'identificacion:gestion_medicos' %}" class="nav-link {% if 'medicos' in request.path %}active{% endif %}">
-                    <i class="bi bi-person-badge"></i> Médicos
-                </a>
-                <a href="{% url 'identificacion:gestion_especialidades' %}" class="nav-link {% if 'especialidades' in request.path %}active{% endif %}">
-                    <i class="bi bi-list-stars"></i> Especialidades
-                </a>
-                <div class="px-3 py-2 small text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Operativo</div>
-                <a href="{% url 'citas:lista_citas' %}" class="nav-link {% if 'citas' in request.path %}active{% endif %}">
-                    <i class="bi bi-calendar-event"></i> Citas
-                </a>
-                <div class="px-3 py-2 small text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Sist.</div>
-                <a href="{% url 'usuarios:configuracion' %}" class="nav-link {% if 'configuracion' in request.path %}active{% endif %}">
-                    <i class="bi bi-gear"></i> Configuración
-                </a>
-                <a href="{% url 'usuarios:gestion_roles_permisos' %}" class="nav-link {% if 'roles' in request.path %}active{% endif %}">
-                    <i class="bi bi-shield-lock"></i> Roles y Permisos
-                </a>
-                <a href="{% url 'usuarios:gestion_usuarios' %}" class="nav-link {% if 'usuarios/' in request.path %}active{% endif %}">
-                    <i class="bi bi-person-gear"></i> Usuarios
-                </a>
-                <a href="{% url 'mediciones:gestion_config_mediciones' %}" class="nav-link {% if 'mediciones' in request.path %}active{% endif %}">
-                    <i class="bi bi-sliders"></i> Config Mediciones
-                </a>
-                <a href="{% url 'diagnostico:gestion_catalogo_enfermedades' %}" class="nav-link {% if 'catalogo-enfermedades' in request.path %}active{% endif %}">
-                    <i class="bi bi-book"></i> Catálogo Enfermedades
-                </a>
-                <a href="{% url 'estadistica:dashboard' %}" class="nav-link {% if 'estadistica' in request.path %}active{% endif %}">
-                    <i class="bi bi-bar-chart"></i> Estadísticas
-                </a>
-            {% else %}
-                <!-- Vista para Médicos / Enfermeras -->
-                <a href="{% url 'usuarios:home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
-                    <i class="bi bi-house"></i> Inicio
-                </a>
-                <a href="{% url 'citas:lista_citas' %}" class="nav-link {% if 'citas' in request.path %}active{% endif %}">
-                    <i class="bi bi-calendar-event"></i> Mis Citas
-                </a>
-                <a href="{% url 'identificacion:lista_pacientes' %}" class="nav-link">
-                    <i class="bi bi-person-heart"></i> Pacientes
-                </a>
+            <a href="{% url 'usuarios:home' %}" class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                <i class="bi bi-house"></i> Inicio
+            </a>
+
+            {# Cada opción del sidebar es un módulo: solo se muestra si el usuario tiene el permiso 'ver' #}
+            {% if 'registrar.crear' in permisos_usuario or 'pacientes.ver' in permisos_usuario or 'medicos.ver' in permisos_usuario or 'especialidades.ver' in permisos_usuario %}
+            <div class="px-3 py-2 small text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Gestión</div>
+
+            {% if 'registrar.crear' in permisos_usuario %}
+            <a href="{% url 'identificacion:registrar_paciente' %}" class="nav-link {% if 'registrar' in request.path %}active{% endif %}">
+                <i class="bi bi-person-plus"></i> Registrar Paciente
+            </a>
             {% endif %}
-            
+            {% if 'pacientes.ver' in permisos_usuario %}
+            <a href="{% url 'identificacion:lista_pacientes' %}" class="nav-link {% if 'pacientes' in request.path %}active{% endif %}">
+                <i class="bi bi-people"></i> Pacientes
+            </a>
+            {% endif %}
+            {% if 'medicos.ver' in permisos_usuario %}
+            <a href="{% url 'identificacion:gestion_medicos' %}" class="nav-link {% if 'medicos' in request.path %}active{% endif %}">
+                <i class="bi bi-person-badge"></i> Médicos
+            </a>
+            {% endif %}
+            {% if 'especialidades.ver' in permisos_usuario %}
+            <a href="{% url 'identificacion:gestion_especialidades' %}" class="nav-link {% if 'especialidades' in request.path %}active{% endif %}">
+                <i class="bi bi-list-stars"></i> Especialidades
+            </a>
+            {% endif %}
+            {% endif %}
+
+            {% if 'citas.ver' in permisos_usuario or 'diagnostico.ver' in permisos_usuario %}
+            <div class="px-3 py-2 small text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Operativo</div>
+
+            {% if 'citas.ver' in permisos_usuario %}
+            <a href="{% url 'citas:lista_citas' %}" class="nav-link {% if 'citas' in request.path %}active{% endif %}">
+                <i class="bi bi-calendar-event"></i> Citas
+            </a>
+            {% endif %}
+            {% if 'diagnostico.ver' in permisos_usuario %}
+            <a href="{% url 'diagnostico:atender_cita' %}" class="nav-link {% if 'atender' in request.path %}active{% endif %}">
+                <i class="bi bi-clipboard2-pulse"></i> Atender Paciente
+            </a>
+            {% endif %}
+            {% endif %}
+
+            {% if 'usuarios.ver' in permisos_usuario or 'configuracion.ver' in permisos_usuario or 'config-mediciones.ver' in permisos_usuario or 'estadisticas.ver' in permisos_usuario or 'identificacion.ver' in permisos_usuario or 'direcciones.ver' in permisos_usuario or 'catalogos.ver' in permisos_usuario or 'catalogo-enfermedades.ver' in permisos_usuario %}
+            <div class="px-3 py-2 small text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Sistema</div>
+
+            {% if 'usuarios.ver' in permisos_usuario or 'configuracion.ver' in permisos_usuario or 'config-mediciones.ver' in permisos_usuario or 'estadisticas.ver' in permisos_usuario or 'identificacion.ver' in permisos_usuario or 'direcciones.ver' in permisos_usuario or 'catalogos.ver' in permisos_usuario or 'catalogo-enfermedades.ver' in permisos_usuario %}
+            <a href="{% url 'usuarios:configuracion' %}" class="nav-link {% if 'configuracion' in request.path %}active{% endif %}">
+                <i class="bi bi-gear"></i> Configuración
+            </a>
+            {% endif %}
+            {% if 'usuarios.ver' in permisos_usuario %}
+            <a href="{% url 'usuarios:gestion_usuarios' %}" class="nav-link {% if 'usuarios/' in request.path %}active{% endif %}">
+                <i class="bi bi-person-gear"></i> Usuarios y Permisos
+            </a>
+            {% endif %}
+            {% if 'config-mediciones.ver' in permisos_usuario %}
+            <a href="{% url 'mediciones:gestion_config_mediciones' %}" class="nav-link {% if 'mediciones' in request.path %}active{% endif %}">
+                <i class="bi bi-sliders"></i> Config. Mediciones
+            </a>
+            {% endif %}
+            {% if 'estadisticas.ver' in permisos_usuario %}
+            <a href="{% url 'estadistica:dashboard' %}" class="nav-link {% if 'estadistica' in request.path %}active{% endif %}">
+                <i class="bi bi-bar-chart-line"></i> Estadísticas
+            </a>
+            {% endif %}
+            {% endif %}
+
             <div class="mt-auto p-3">
                 <a href="{% url 'usuarios:logout' %}" class="btn btn-outline-danger w-100 rounded-pill">
                     <i class="bi bi-box-arrow-right"></i> Salir
@@ -167,7 +188,24 @@
         {% block content %}{% endblock %}
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    <!-- AlertifyJS + helper de notificaciones -->
+    <script src="{% static 'alertify/alertify.min.js' %}"></script>
+    <script src="{% static 'js/notificar.js' %}"></script>
+    <script>
+    // Muestra los mensajes de Django (django.contrib.messages) con AlertifyJS
+    document.addEventListener('DOMContentLoaded', function () {
+        if (typeof notify === 'undefined') return;
+        document.querySelectorAll('[data-notify]').forEach(function (el) {
+            var tipo = el.getAttribute('data-notify');
+            var texto = el.getAttribute('data-notify-texto') || el.textContent.trim();
+            if (tipo === 'success') notify.ok(texto);
+            else if (tipo === 'error') notify.error(texto);
+            else if (tipo === 'warning') notify.info(texto);
+            else notify.info(texto);
+        });
+    });
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>
