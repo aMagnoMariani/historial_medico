@@ -1,0 +1,19 @@
+# Entorno virtual
+venv/
+
+# Configuración con datos reales (nunca subir)
+.env
+
+# Archivos recopilados (se regeneran con collectstatic)
+staticfiles/
+
+# Copias de seguridad
+sql/respaldos/
+
+# Python
+__pycache__/
+*.pyc
+
+# Base de datos local
+*.sqlite3
+db.sqlite3

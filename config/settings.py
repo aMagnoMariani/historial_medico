@@ -10,24 +10,47 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
+# ---------------------------------------------------------------------
+#  Cargar el archivo .env (formato CLAVE=valor, una por linea)
+# ---------------------------------------------------------------------
+def _cargar_env(ruta):
+    """Lee .env y pone los valores en os.environ (sin sobreescribir)."""
+    if not ruta.exists():
+        return
+    with open(ruta, encoding='utf-8') as fh:
+        for linea in fh:
+            linea = linea.strip()
+            if not linea or linea.startswith('#') or '=' not in linea:
+                continue
+            clave, _, valor = linea.partition('=')
+            clave = clave.strip()
+            valor = valor.strip().strip('"').strip("'")
+            if clave and clave not in os.environ:
+                os.environ[clave] = valor
+
+
+_cargar_env(BASE_DIR / '.env')
+
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-mdbae7e1_z$7onls$m&j==j$1e*t*j02dkd68ciz1d@($d#ke3'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('1', 'true', 'yes')
 
 # En desarrollo se acepta el host del cliente de pruebas de Django.
 # En producción revisa esta lista (ver docs/INSTALACION.md).
-ALLOWED_HOSTS = ['testserver', 'localhost', '127.0.0.1'] if DEBUG else []
+_allowed = os.environ.get('DJANGO_ALLOWED_HOSTS', '')
+ALLOWED_HOSTS = ([h.strip() for h in _allowed.split(',') if h.strip()]
+                 if _allowed else
+                 (['testserver', 'localhost', '127.0.0.1'] if DEBUG else []))
 
 
 # Application definition
@@ -102,11 +125,12 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'clinica',
-        'USER': 'alemagno',
-        'PASSWORD': 'postgres',
-        'HOST': '',
-        'PORT': '5432',
+        'NAME': os.environ.get('DB_NAME', 'clinica'),
+        'USER': os.environ.get('DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', 'postgres'),
+        # Vacio = conexion por socket local
+        'HOST': os.environ.get('DB_HOST', ''),
+        'PORT': os.environ.get('DB_PORT', '5432'),
         'OPTIONS': {
             'options': '-c search_path=clinica,public',
         },

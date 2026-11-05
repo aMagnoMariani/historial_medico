@@ -90,10 +90,16 @@ ALTER TABLE "clinica"."direccion" ALTER COLUMN "divicion_politica_id" SET NOT NU
 ALTER TABLE "clinica"."direccion" ALTER COLUMN "tipo" SET DEFAULT 0;
 
 -- Recrear la llave (ahora el 0 existe)
-ALTER TABLE "clinica"."direccion"
-    ADD CONSTRAINT "direccion_divicion_fkey"
-    FOREIGN KEY ("divicion_politica_id")
-    REFERENCES "clinica"."direccion" ("id");
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint
+                   WHERE conname = 'direccion_divicion_fkey') THEN
+        ALTER TABLE "clinica"."direccion"
+            ADD CONSTRAINT "direccion_divicion_fkey"
+            FOREIGN KEY ("divicion_politica_id")
+            REFERENCES "clinica"."direccion" ("id");
+    END IF;
+END $$;
 
 -- ---------------------------------------------------------------------
 -- 2. IDENTIFICACION  (1=Documento, 2=Subtipo)
@@ -120,10 +126,16 @@ UPDATE "clinica"."identificacion"
 ALTER TABLE "clinica"."identificacion" ALTER COLUMN "descripcion_id" SET DEFAULT 0;
 ALTER TABLE "clinica"."identificacion" ALTER COLUMN "descripcion_id" SET NOT NULL;
 
-ALTER TABLE "clinica"."identificacion"
-    ADD CONSTRAINT "identificacion_descripcion_fkey"
-    FOREIGN KEY ("descripcion_id")
-    REFERENCES "clinica"."identificacion" ("id");
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint
+                   WHERE conname = 'identificacion_descripcion_fkey') THEN
+        ALTER TABLE "clinica"."identificacion"
+            ADD CONSTRAINT "identificacion_descripcion_fkey"
+            FOREIGN KEY ("descripcion_id")
+            REFERENCES "clinica"."identificacion" ("id");
+    END IF;
+END $$;
 
 -- ---------------------------------------------------------------------
 -- 3. ENFERMEDAD  (1=Categoría, 2=Enfermedad)
@@ -133,12 +145,21 @@ ALTER TABLE "clinica"."identificacion"
 ALTER TABLE "clinica"."enfermedad"
     ADD COLUMN IF NOT EXISTS "tipo" integer NOT NULL DEFAULT 0;
 
-INSERT INTO "clinica"."enfermedad"
-    ("id", "desc", "valor", "enfermedad_id", "diagnostico_id", "tipo")
-SELECT 0, ARRAY['NINGUNO'], 'NINGUNO', 0, MIN("id"), 0
-  FROM "clinica"."diagnostico"
-ON CONFLICT ("id") DO UPDATE
-  SET "enfermedad_id" = 0, "tipo" = 0;
+-- El ancla necesita un diagnostico_id (la columna es NOT NULL), así que
+-- solo se crea si ya existe al menos un diagnóstico.
+DO $$
+DECLARE
+    diag integer;
+BEGIN
+    SELECT MIN("id") INTO diag FROM "clinica"."diagnostico";
+    IF diag IS NOT NULL THEN
+        INSERT INTO "clinica"."enfermedad"
+            ("id", "desc", "valor", "enfermedad_id", "diagnostico_id", "tipo")
+        VALUES (0, ARRAY['NINGUNO'], 'NINGUNO', 0, diag, 0)
+        ON CONFLICT ("id") DO UPDATE
+          SET "enfermedad_id" = 0, "tipo" = 0;
+    END IF;
+END $$;
 
 UPDATE "clinica"."enfermedad"
    SET "enfermedad_id" = 0
@@ -151,20 +172,33 @@ UPDATE "clinica"."enfermedad"
 ALTER TABLE "clinica"."enfermedad" ALTER COLUMN "enfermedad_id" SET DEFAULT 0;
 ALTER TABLE "clinica"."enfermedad" ALTER COLUMN "enfermedad_id" SET NOT NULL;
 
-ALTER TABLE "clinica"."enfermedad"
-    ADD CONSTRAINT "enfermedad_enfermedad_id_fk"
-    FOREIGN KEY ("enfermedad_id")
-    REFERENCES "clinica"."enfermedad" ("id");
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint
+                   WHERE conname = 'enfermedad_enfermedad_id_fk') THEN
+        ALTER TABLE "clinica"."enfermedad"
+            ADD CONSTRAINT "enfermedad_enfermedad_id_fk"
+            FOREIGN KEY ("enfermedad_id")
+            REFERENCES "clinica"."enfermedad" ("id");
+    END IF;
+END $$;
 
 -- ---------------------------------------------------------------------
 -- 4. SINTOMAS  (1=Categoría, 2=Síntoma)
 -- ---------------------------------------------------------------------
-INSERT INTO "clinica"."sintomas"
-    ("id", "desc", "depende", "tipo", "diagnostico_id")
-SELECT 0, 'NINGUNO', 0, 0, MIN("id")
-  FROM "clinica"."diagnostico"
-ON CONFLICT ("id") DO UPDATE
-  SET "depende" = 0, "tipo" = 0;
+DO $$
+DECLARE
+    diag integer;
+BEGIN
+    SELECT MIN("id") INTO diag FROM "clinica"."diagnostico";
+    IF diag IS NOT NULL THEN
+        INSERT INTO "clinica"."sintomas"
+            ("id", "desc", "depende", "tipo", "diagnostico_id")
+        VALUES (0, 'NINGUNO', 0, 0, diag)
+        ON CONFLICT ("id") DO UPDATE
+          SET "depende" = 0, "tipo" = 0;
+    END IF;
+END $$;
 
 UPDATE "clinica"."sintomas"
    SET "depende" = 0
@@ -178,12 +212,16 @@ ALTER TABLE "clinica"."sintomas" ALTER COLUMN "depende" SET DEFAULT 0;
 ALTER TABLE "clinica"."sintomas" ALTER COLUMN "depende" SET NOT NULL;
 ALTER TABLE "clinica"."sintomas" ALTER COLUMN "tipo" SET DEFAULT 1;
 
-ALTER TABLE "clinica"."sintomas"
-    DROP CONSTRAINT IF EXISTS "sintomas";
-ALTER TABLE "clinica"."sintomas"
-    ADD CONSTRAINT "sintomas_depende_fkey"
-    FOREIGN KEY ("depende")
-    REFERENCES "clinica"."sintomas" ("id");
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint
+                   WHERE conname = 'sintomas_depende_fkey') THEN
+        ALTER TABLE "clinica"."sintomas"
+            ADD CONSTRAINT "sintomas_depende_fkey"
+            FOREIGN KEY ("depende")
+            REFERENCES "clinica"."sintomas" ("id");
+    END IF;
+END $$;
 
 -- ---------------------------------------------------------------------
 -- 5. ANTECEDENTES_SALUD  (1=Categoría, 2=Antecedente)
@@ -191,11 +229,21 @@ ALTER TABLE "clinica"."sintomas"
 ALTER TABLE "clinica"."antecedentes_salud"
     ADD COLUMN IF NOT EXISTS "tipo" integer NOT NULL DEFAULT 2;
 
-INSERT INTO "clinica"."antecedentes_salud"
-    ("id", "descrip", "antecedente_salud_id", "valor", "paciente_id", "tipo")
-VALUES (0, 'NINGUNO', 0, 'NINGUNO', 1, 0)
-ON CONFLICT ("id") DO UPDATE
-  SET "antecedente_salud_id" = 0, "tipo" = 0;
+-- El ancla necesita un paciente_id (la columna es NOT NULL), así que
+-- solo se crea si ya existe al menos un paciente.
+DO $$
+DECLARE
+    pac integer;
+BEGIN
+    SELECT MIN("id") INTO pac FROM "clinica"."paciente";
+    IF pac IS NOT NULL THEN
+        INSERT INTO "clinica"."antecedentes_salud"
+            ("id", "descrip", "antecedente_salud_id", "valor", "paciente_id", "tipo")
+        VALUES (0, 'NINGUNO', 0, 'NINGUNO', pac, 0)
+        ON CONFLICT ("id") DO UPDATE
+          SET "antecedente_salud_id" = 0, "tipo" = 0;
+    END IF;
+END $$;
 
 UPDATE "clinica"."antecedentes_salud"
    SET "antecedente_salud_id" = 0
